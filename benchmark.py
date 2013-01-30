@@ -12,7 +12,7 @@ import shutil
 def ftp_download(time_point):
     filename = ''
     file_list = []
-    ftp_dir = '/home/raji/Desktop/CAFA/ftp_dir/'
+    ftp_dir = '/home/raji/Desktop/CAFA_new/ftp_dir/'
     ftp = FTP('ftp.ebi.ac.uk')
     ftp.login()
 
@@ -27,14 +27,17 @@ def ftp_download(time_point):
 
     if len(file_list) < 10:
         for i in file_list:
-            if not i.startswith('gene_association'):
+            terms = i.split(' ')
+            if not terms[-1].startswith('gene_association'):
                 continue
-            filename = i
-            local_filename = os.path.join(r'/home/raji/Desktop/CAFA/' + filename)
+            if not os.path.exists(ftp_dir):
+                os.makedirs(ftp_dir)
+            filename = terms[-1]
+            local_filename = os.path.join(ftp_dir + filename)
             outfile = open(local_filename,'wb')
             ftp.retrbinary('RETR '+filename, outfile.write)
-            outfile.close()
-            ftp.quit()
+        outfile.close()
+        ftp.quit()
         print "Downloaded files from uniprot-goa ......."
     else:
         for i in file_list:
@@ -69,45 +72,57 @@ args = parser.parse_args()
 user_organism = args.organism
 user_ontology = args.ontology
 user_evidence = args.evidence
+target_infile = ''
+exp_infile = ''
+cafa_target_file = ''
+other_target_file = ''
+exp_ann_file = ''
+download_dir = ''
 
 # User Input 
-test_file = raw_input("Do you have a CAFA Target's File? (yes/no) : ")
-if test_file == 'yes':
-    t0_pred_set = raw_input("Enter the absolute path to the above file : ")
-    t1_file_point = raw_input("Enter the version (in MM_YYYY format) of uniprot-goa from which to consider experimental annotations : ")    
-    download_dir = ftp_download(t1_file_point)
-
-# This section is yet to be worked out
-elif test_file == 'no':
-    download_options = raw_input("Would you like to download the files? (yes/no) : ")
-    if download_options == 'yes':
-        t0_file_point = raw_input("Enter the time point at which you want to consider non-experimental anntations from uniprot-goa : ")
-        print "Downloading target file from UniProt-GOA ........"
-        t0_pred_set = 'new_t0_file.txt'
-        t1_file_point = raw_input("Enter the time point at which you want to consider experimental anntations from uniprot-goa : ")
-        print "Downloading file from uniprot-goa ......."
-        t1_pred_set = 'new_t1_file.txt'
+cafa_file = raw_input("Do you have a CAFA Target File? (yes/no) : ")
+if cafa_file == 'yes':
+    cafa_target_file = raw_input("Enter the absolute path to the CAFA Target File : ")
+    exp_ann_file = raw_input("Enter the version (in MM_YYYY format) of uniprot-goa from which to consider experimental annotations OR Enter path to uniprot-goa file if already downloaded : ")
+    if re.match('[a-zA-Z]+\_\d+',exp_ann_file):
+        download_dir = ftp_download(exp_ann_file)
     else:
-        t0_pred_file = raw_input("Enter absolute path to file containing non-experimental annotations : ")
-        t1_pred_file = raw_input("Enter absolute path to file cotaining experimental annotations : ")
+        exp_file = exp_ann_file
+
+else:
+    other_file = raw_input("Do you have any target file that you want to use? (yes/no) : ")
+    if other_file == 'yes':
+        other_target_file = raw_input("Enter the absolute path to Target File : ")
+        exp_ann_file = raw_input("Enter the version (in MM_YYYY format) of uniprot-goa from which to consider experimental annotations OR OR Enter path to uniprot-goa file if already downloaded: ")
+        if re.match('[a-zA-Z]+\_\d+',exp_ann_file):
+            download_dir = ftp_download(exp_ann_file)
+        else:
+            exp_file = exp_ann_file
+    else:
+        file_options = raw_input("Would you like to download files from uniprot-goa for creating your benchmark? (yes/no) : ")
+        if file_options == 'yes':
+            uniprot_version = raw_input("Enter the uniprot-goa version (in MM_YYYY format) to download : ")
+            download_dir = ftp_download(uniprot_version)
 
 
 # Extract the downloaded files
 version_number = []
 index = 0
-for root,dirs,files in os.walk(download_dir):
-    if len(files) > 1:
-        for filename in files:
-            version_number.append(filename.split('.')[2])
-        version_number.sort()
-        
-        filepath = root + filename.split('.')[0] + '.' + filename.split('.')[1] + '.' + version_number[-1] + '.gz'
-        os.system('gunzip ' + filepath)
-        t1_pred_set = re.sub('.gz','',filepath)
-    else:
-        filepath = root + files[0]
-        os.system('gunzip ' + filepath)
-        t1_pred_set = re.sub('.gz','',filepath)
+
+if not download_dir == '' :
+    for root,dirs,files in os.walk(download_dir):
+        if len(files) > 1:
+            for filename in files:
+                version_number.append(filename.split('.')[2])
+                version_number.sort()
+                
+            filepath = root + filename.split('.')[0] + '.' + filename.split('.')[1] + '.' + version_number[-1] + '.gz'
+            os.system('gunzip ' + filepath)
+            exp_file = re.sub('.gz','',filepath)
+        else:
+            filepath = root + files[0]
+            os.system('gunzip ' + filepath)
+            exp_file = re.sub('.gz','',filepath)
 
 #***********************************************************************************************
 # User parameter values
@@ -150,47 +165,55 @@ for tax_lines in tax_file:
 #***********************************************************************************************
 # Now that the user arguments have been saved into python objects, the next step will be to parse the files according to the user parameters (stored above) and create a benchmark file. The 2 input files are currently of the same format as a uniprot-goa file. 
 
-t0_infile = open(t0_pred_set ,'r')
-t1_infile = open(t1_pred_set ,'r')
+exp_infile = open(exp_file ,'r')
 
 outfile = open('Benchmark_proteins.txt','w')
 
-t0_protein_dict = defaultdict(defaultdict)
 count = 0
 
-for lines in t0_infile:
-    if lines.startswith('!gaf-version'):
-        print 'Parsing a UniProt-GOA file'
-        continue
-    if not lines.startswith('UniProt'):
-        continue
-    newlines = re.sub(r'\n','',lines)
-    
-    terms = newlines.split('\t')
-    if terms[6] in EEC_default:
-        continue
-    t0_protein_dict[terms[1]][terms[4]] = terms[6]
+protein_dict = defaultdict(int)
 
-for line in t1_infile:
+if not cafa_target_file == '':
+    target_infile = open(cafa_target_file ,'r')
+    for lines in target_infile:
+        newlines = re.sub(r'\n','',lines)
+        if newlines.startswith('>'):
+            protein_id = newlines.split(' ')[0]
+            protein_dict[protein_id] = 1
+elif not other_target_file == '':
+    target_infile = open(other_target_file, 'r')
+    for lines in target_infile:
+        newlines = re.sub(r'\n','',lines)
+        cols = newlines.split('\t')
+        protein_dict[cols[0]] = 1
+
+for line in exp_infile:
     if line.startswith('!gaf-version'):
         continue
     if not line.startswith('UniProt'):
         continue
     newline = re.sub(r'\n','',line)
     fields = newline.split('\t')
-    #print fields[4] + '\t' +  fields[6] + '\t' + fields[8]
-    #db, db_object_id, db_object_symbol, qualifier, go_id, db_reference, evidence, withit, aspect,db_object_name, synonym, db_object_type,taxon_id, date, assigned_by,annotation_extension, gene_product_form_id = newline.split('\t')
     taxon_id = fields[12].split(':')[1]
 
     if tax_id_name_mapping.has_key(taxon_id):
         organism = re.sub(r' ','_',tax_id_name_mapping[taxon_id])
-        
-    if t0_protein_dict.has_key(fields[1]):
-        if t0_protein_dict[fields[1]].has_key(fields[4]):
+
+        if not target_infile == '':
+            if protein_dict.has_key(fields[1]):
+                if ORG_user == 1:
+                    if (fields[6] in EEC_user) and (fields[8] in ONT_user):
+                        count = 1
+                        print >> outfile, fields[2] + '\t' + fields[4] + '\t' + fields[8]
+                else:
+                    if (fields[6] in EEC_user) and (fields[8] in ONT_user) and (organism in ORG_user):
+                        count  = 1
+                        print >> outfile, fields[2] + '\t' + fields[4] + '\t' + fields[8]
+        else:
             if ORG_user == 1:
                 if (fields[6] in EEC_user) and (fields[8] in ONT_user):
                     count = 1
-                    print >> outfile, db_object_id + '\t' + go_id + '\t' + aspect
+                    print >> outfile, fields[2] + '\t' + fields[4] + '\t' + fields[8]
             else:
                 if (fields[6] in EEC_user) and (fields[8] in ONT_user) and (organism in ORG_user):
                     count  = 1

@@ -32,13 +32,14 @@ def ftp_download(time_point):
                 continue
             if not os.path.exists(ftp_dir):
                 os.makedirs(ftp_dir)
+            print "Downloading files from uniprot-goa ......."
             filename = terms[-1]
             local_filename = os.path.join(ftp_dir + filename)
             outfile = open(local_filename,'wb')
             ftp.retrbinary('RETR '+filename, outfile.write)
         outfile.close()
         ftp.quit()
-        print "Downloaded files from uniprot-goa ......."
+        print "Download Complete !!!!"
     else:
         for i in file_list:
             terms = i.split(' ')
@@ -52,6 +53,7 @@ def ftp_download(time_point):
                 local_filename = os.path.join(ftp_dir + filename)
                 outfile = open(local_filename,'wb')
                 ftp.retrbinary('RETR '+filename, outfile.write)
+        print "Download Complete !!!!"
         outfile.close()
         ftp.quit()
 
@@ -66,44 +68,43 @@ parser = argparse.ArgumentParser(prog='benchmark.py',description='Creates a set 
 parser.add_argument('--organism',nargs='+', default='all',help='Specifies a set of organisms whose proteins will be considered for benchmarking')
 parser.add_argument('--ontology',nargs='+', default='all',help='Specifies the set of ontologies to be used. By default, all 3 ontologies will be used')
 parser.add_argument('--evidence',nargs='+', default='all',help='Specifies the evidence codes to be considered. By default, all experimentally validated evidence codes (as per GO standards) will be considered')
+parser.add_argument('--CAFA_Participant',action='store', default=False ,help='Specifies whether a user is a CAFA participant or not. ')
+parser.add_argument('--Target_File',action='store',help='Specifies an absolute path to a Target file (either CAFA Targets File or any other. If not specified, takes the value of None')
+parser.add_argument('--Exp_File',action='store' ,help='Specifies either an absolute path to a file with experimental evidence codes or mentions a version in MM_YYYY format (for eg: Dec_2006)to be downloaded.If not specified, takes the value of None')
 
 args = parser.parse_args()
 
 user_organism = args.organism
 user_ontology = args.ontology
 user_evidence = args.evidence
-target_infile = ''
-exp_infile = ''
+cafa_user = args.CAFA_Participant
+download_dir = ''
 cafa_target_file = ''
 other_target_file = ''
-exp_ann_file = ''
-download_dir = ''
+exp_file = ''
+target_infile = ''
+exp_infile = ''
 
-# User Input 
-cafa_file = raw_input("Do you have a CAFA Target File? (yes/no) : ")
-if cafa_file == 'yes':
-    cafa_target_file = raw_input("Enter the absolute path to the CAFA Target File : ")
-    exp_ann_file = raw_input("Enter the version (in MM_YYYY format) of uniprot-goa from which to consider experimental annotations OR Enter path to uniprot-goa file if already downloaded : ")
+if cafa_user == 'True':
+    if not args.Target_File == None: 
+        cafa_target_file = args.Target_File
+    else:
+        print "Please enter a valid Target File"
+        sys.exit(1)
+else:
+    target_file = args.Target_File
+    if not target_file == None:
+        other_target_file = target_file
+
+if not args.Exp_File == None:
+    exp_ann_file = args.Exp_File
     if re.match('[a-zA-Z]+\_\d+',exp_ann_file):
         download_dir = ftp_download(exp_ann_file)
     else:
         exp_file = exp_ann_file
-
 else:
-    other_file = raw_input("Do you have any target file that you want to use? (yes/no) : ")
-    if other_file == 'yes':
-        other_target_file = raw_input("Enter the absolute path to Target File : ")
-        exp_ann_file = raw_input("Enter the version (in MM_YYYY format) of uniprot-goa from which to consider experimental annotations OR OR Enter path to uniprot-goa file if already downloaded: ")
-        if re.match('[a-zA-Z]+\_\d+',exp_ann_file):
-            download_dir = ftp_download(exp_ann_file)
-        else:
-            exp_file = exp_ann_file
-    else:
-        file_options = raw_input("Would you like to download files from uniprot-goa for creating your benchmark? (yes/no) : ")
-        if file_options == 'yes':
-            uniprot_version = raw_input("Enter the uniprot-goa version (in MM_YYYY format) to download : ")
-            download_dir = ftp_download(uniprot_version)
-
+    print "Please enter a valid uniprot-goa Experimental File"
+    sys.exit(1)
 
 # Extract the downloaded files
 version_number = []

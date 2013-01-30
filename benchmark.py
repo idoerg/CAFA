@@ -65,12 +65,12 @@ print "Welcome to the Benchmark Creation tool !!!!!"
 print "*************************************************"
 
 parser = argparse.ArgumentParser(prog='benchmark.py',description='Creates a set of benchmark proteins')
-parser.add_argument('--organism',nargs='+', default='all',help='Specifies a set of organisms whose proteins will be considered for benchmarking')
-parser.add_argument('--ontology',nargs='+', default='all',help='Specifies the set of ontologies to be used. By default, all 3 ontologies will be used')
-parser.add_argument('--evidence',nargs='+', default='all',help='Specifies the evidence codes to be considered. By default, all experimentally validated evidence codes (as per GO standards) will be considered')
-parser.add_argument('--CAFA_Participant',action='store', default=False ,help='Specifies whether a user is a CAFA participant or not. ')
-parser.add_argument('--Target_File',action='store',help='Specifies an absolute path to a Target file (either CAFA Targets File or any other. If not specified, takes the value of None')
-parser.add_argument('--Exp_File',action='store' ,help='Specifies either an absolute path to a file with experimental evidence codes or mentions a version in MM_YYYY format (for eg: Dec_2006)to be downloaded.If not specified, takes the value of None')
+parser.add_argument('--organism',nargs='+', default='all',help='Specifies a set of organisms (multiple organisms to be separated by space) whose proteins will be considered for benchmarking. Default is all organisms')
+parser.add_argument('--ontology',nargs='+', default='all',help='Specifies the set of ontologies(multiple ontologies to be separated by space) to be used. By default, all 3 ontologies will be used. Default is all 3 ontologies')
+parser.add_argument('--evidence',nargs='+', default='all',help='Specifies the evidence codes to be considered (multiple codes separated by space). By default, all experimentally validated evidence codes (as per GO standards) will be considered. Default is all experimental evidence codes')
+parser.add_argument('--CAFA_Participant',action='store', default=False ,help='Specifies whether a user is a CAFA participant or not (True/False). Default is False')
+parser.add_argument('--Target_File',action='store',help='Specifies an absolute path to a Target file (either CAFA Targets File or any other. If not specified, defaults to None')
+parser.add_argument('--Exp_File',action='store' ,help='Specifies either an absolute path to a file with experimental evidence codes or mentions a version in MM_YYYY format (for eg: Dec_2006)to be downloaded.If not specified, defaults to None')
 
 args = parser.parse_args()
 

@@ -16,6 +16,7 @@ def ftp_download(time_point, mode):
         ftp_dir = '/home/raji/Desktop/CAFA_new/exp_ftp_dir/'
     filename = ''
     file_list = []
+    download_status = 0
     #ftp_dir = '/home/raji/Desktop/CAFA_new/ftp_dir/'
     ftp = FTP('ftp.ebi.ac.uk')
     ftp.login()
@@ -41,15 +42,17 @@ def ftp_download(time_point, mode):
             local_filename = os.path.join(ftp_dir + filename)
             outfile = open(local_filename,'wb')
             ftp.retrbinary('RETR '+filename, outfile.write)
-        outfile.close()
+            print "Download Complete !!!!"
+            outfile.close()
         ftp.quit()
-        print "Download Complete !!!!"
+        
     else:
         for i in file_list:
             terms = i.split(' ')
             if not terms[-1].startswith('gene_association'):
                 continue
             if (terms[18] == month) and (terms[21] == year):
+                download_status = 1
                 if not os.path.exists(ftp_dir):
                     os.makedirs(ftp_dir)
                 print "Downloading files from uniprot-goa ......."
@@ -57,10 +60,12 @@ def ftp_download(time_point, mode):
                 local_filename = os.path.join(ftp_dir + filename)
                 outfile = open(local_filename,'wb')
                 ftp.retrbinary('RETR '+filename, outfile.write)
-        print "Download Complete !!!!"
-        outfile.close()
+                print "Download Complete !!!!"
+                outfile.close()
         ftp.quit()
-
+    if download_status == 0:
+        print 'There is no file in the time frame specified. Please check and re-run the program'
+        sys.exit(1)
     return ftp_dir
 
 # Extract the downloaded files
@@ -131,9 +136,6 @@ else:
             other_target_file = extract_downloads(target_dir, mode)
         else:
             other_target_file = target_file
-    #else:
-        #print "Please enter a valid target file"
-        #sys.exit(1)
 
 if not args.Exp_File == None:
     mode = 1
@@ -206,18 +208,22 @@ elif not other_target_file == '':
     protein_go_dict = defaultdict(defaultdict)
     other_target_infile = open(other_target_file, 'r')
     for lines in other_target_infile:
+        if lines.startswith('!gaf-version'):
+            continue
         newlines = re.sub(r'\n','',lines)
         cols = newlines.split('\t')
+        if not re.match('UniProt',cols[0]):
+            continue
         if cols[6] == 'IEA':
             protein_go_dict[cols[1]][cols[4]] = 1
 
 for line in exp_infile:
     if line.startswith('!gaf-version'):
         continue
-    if not line.startswith('UniProt'):
-        continue
     newline = re.sub(r'\n','',line)
     fields = newline.split('\t')
+    if not re.match('UniProt',fields[0]):
+        continue
     taxon_id = fields[12].split(':')[1]
 
     if tax_id_name_mapping.has_key(taxon_id):
@@ -228,11 +234,11 @@ for line in exp_infile:
                 if ORG_user == 1:
                     if (fields[6] in EEC_user) and (fields[8] in ONT_user):
                         count = 1
-                        print >> outfile, fields[2] + '\t' + fields[4] + '\t' + fields[8]
+                        print >> outfile, fields[1] + '\t' + fields[4] + '\t' + fields[8]
                 else:
                     if (fields[6] in EEC_user) and (fields[8] in ONT_user) and (organism in ORG_user):
                         count  = 1
-                        print >> outfile, fields[2] + '\t' + fields[4] + '\t' + fields[8]
+                        print >> outfile, fields[1] + '\t' + fields[4] + '\t' + fields[8]
 
         elif not other_target_infile == '':
             if protein_go_dict.has_key(fields[1]):
@@ -240,20 +246,20 @@ for line in exp_infile:
                     if ORG_user == 1:
                         if (fields[6] in EEC_user) and (fields[8] in ONT_user):
                             count = 1
-                            print >> outfile, fields[2] + '\t' + fields[4] + '\t' + fields[8]
+                            print >> outfile, fields[1] + '\t' + fields[4] + '\t' + fields[8]
                     else:
                         if (fields[6] in EEC_user) and (fields[8] in ONT_user) and (organism in ORG_user):
                             count  = 1
-                            print >> outfile, fields[2] + '\t' + fields[4] + '\t' + fields[8]
+                            print >> outfile, fields[1] + '\t' + fields[4] + '\t' + fields[8]
         else:
             if ORG_user == 1:
                 if (fields[6] in EEC_user) and (fields[8] in ONT_user):
                     count = 1
-                    print >> outfile, fields[2] + '\t' + fields[4] + '\t' + fields[8]
+                    print >> outfile, fields[1] + '\t' + fields[4] + '\t' + fields[8]
             else:
                 if (fields[6] in EEC_user) and (fields[8] in ONT_user) and (organism in ORG_user):
                     count  = 1
-                    print >> outfile, fields[2] + '\t' + fields[4] + '\t' + fields[8]
+                    print >> outfile, fields[1] + '\t' + fields[4] + '\t' + fields[8]
 
 if count == 1:
     print "Congratulations ! Your benchmark file has been created\n"

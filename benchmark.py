@@ -2,11 +2,14 @@
 
 import os
 import sys
+import numpy as np
 import re
 from collections import defaultdict
 import argparse
 from ftplib import FTP
 import shutil
+from matplotlib import pyplot as py
+from matplotlib.ticker import MaxNLocator
 
 # FTP session begins
 def ftp_download(time_point, mode):
@@ -99,10 +102,52 @@ def extract_downloads(download_dir, mode):
     
     return unzipped_file
 
+def plot_distributions(input_dict):
+    x_val = []
+    y_val = []
+    xTickNames = []
+    index = 1
+
+    fig = py.figure()
+    ax = py.gca()
+    ax.xaxis.set_major_locator(MaxNLocator(4))
+    
+    for key1 in input_dict:
+        x_val.append(index)
+        y_val.append(len(input_dict[key1]))
+        xTickNames.append(key1)
+        index = index + 1
+    py.bar(x_val,y_val,facecolor='red')
+    py.xticks(np.arange(len(input_dict)), xTickNames)
+    #py.xlabel('Gene Ontology')
+    py.ylabel('Frequency')
+    #frame1.axes.get_xaxis().set_visible(False)
+    #py.show()
+    
 # Create plots to view dataset statistics
 
-#def calculate_statistics(default_op, filtered_op):
+def calculate_statistics(benchmark_file):
+
+    unique_prot = defaultdict(int)
+    unique_ann = defaultdict(int)
+    dist_ontologies = defaultdict(defaultdict)
+    dist_organisms = defaultdict(defaultdict)
     
+    outfile = open('stats.txt', 'w')
+    file_handle = open(benchmark_file, 'r')
+    for lines in file_handle:
+        corr_lines = re.sub(r'\n','',lines)
+        fields = corr_lines.split('\t')
+        unique_prot[fields[0]] = 1
+        unique_ann[fields[1]] = 1
+        dist_ontologies[fields[4]][fields[1]] = 1
+        dist_organisms[fields[-1]][fields[0]] = 1
+
+    print >> outfile, 'NumberOfProteins\tNumberOfAnnotations'
+    print >> outfile, str(len(unique_prot)) + '\t' + str(len(unique_ann))
+
+    plot_distributions(dist_ontologies)
+    #plot_distributions(dist_organisms)
 
 # The first step with using the argparse module is to create a parser object that can then parse all the user inputs and convert them into python objects based on the user input types provided
 
@@ -160,16 +205,20 @@ else:
         if re.match('[a-zA-Z]+\_\d+',args.t1):
             t1_ftp_dir = ftp_download(args.t1,mode)
             t1_input_file = extract_downloads(t1_ftp_dir, mode)
+            t1_handle = open('./t1_ftp_dir/' + t1_input_file, 'r')
         else:
             t1_input_file = args.t1
+            t1_handle = open(t1_input_file, 'r')
 
 if not args.t2 == None:
     mode = 1
     if re.match('[a-zA-Z]+\_\d+',args.t2):
         t2_ftp_dir = ftp_download(args.t2,mode)
         t2_input_file = extract_downloads(t2_ftp_dir, mode)
+        t2_handle = open('./t2_ftp_dir/' + t2_input_file ,'r')
     else:
         t2_input_file = args.t2
+        t2_handle = open(t2_input_file ,'r')
 else:
     print "Please enter a valid uniprot-goa Experimental File"
     sys.exit(1)
@@ -216,7 +265,7 @@ for tax_lines in tax_file:
 #***********************************************************************************************
 # Now that the user arguments have been saved into python objects, the next step will be to parse the files according to the user parameters (stored above) and create a benchmark file. The 2 input files are currently of the same format as a uniprot-goa file. 
 
-t2_handle = open('./t2_ftp_dir/' + t2_input_file ,'r')
+
 
 index = 1
 outfile = 'Benchmark_for_' + t2_input_file.split('.')[1] + '_' + t2_input_file.split('.')[2] + '_' + str(index) + '_default.txt'
@@ -240,14 +289,13 @@ if not cafa_input_file == '':
 
 elif not t1_input_file == '':
     protein_go_dict = defaultdict(defaultdict)
-    t1_handle = open('./t1_ftp_dir/' + t1_input_file, 'r')
+    
     for lines in t1_handle:
         if lines.startswith('!gaf-version'):
             continue
         newlines = re.sub(r'\n','',lines)
         cols = newlines.split('\t')
-        #if not re.match('UniProt',cols[0]):
-         #   continue
+    
         if cols[6] == 'IEA':
             protein_go_dict[cols[1]][cols[4]] = 1
 
@@ -256,30 +304,35 @@ pubmed_option = raw_input('Do you wanna include GO terms that do not have a PubM
 annotation_confidence = raw_input('Do you wanna include annotations that appear in few papers : ')
 
 if annotation_confidence == 'no':
-    paper_threshold = raw_input('What is your threshold for the minimum number number of papers : ')
+    paper_threshold = raw_input('What is your threshold for the minimum number of papers : ')
     paper_term = defaultdict(lambda:defaultdict(set))
 
-bias_papers = raw_input('Would you like a list of papers that have annotated too many proteins : ')
-if bias_papers == 'yes' :
-    bias_threshold = raw_input('Enter the maximum threshold for the number of proteins being annotated in a paper : ')
+if not os.path.exists('list_papers_with_annotation_frequency.txt'):
+    paper_annotation_freq  = 'list_papers_with_annotation_frequency.txt'
+    paper_ann_freq_handle = open(paper_annotation_freq, 'w')
     paper_prot_freq = defaultdict(defaultdict)
-    bias_paper_output = 'list_of_papers_annotating_many_proteins.txt'
-    bias_paper_handle = open(bias_paper_output , 'w')
+    paper_prot_freq_index = 1
+    black_set = set()
+else:
+    paper_prot_freq_index = 0
+    blacklist_papers = raw_input('Provide a list of pubmed ids (separated by space if providing multiple ids) to be blacklisted : ')
+    if not blacklist_papers == '':
+        pubmed_id = blacklist_papers.split(' ')
+        black_set = set()
+        for i in pubmed_id:
+            black_set.add(i)
 
 for line in t2_handle:
     if line.startswith('!gaf-version'):
         continue
     newline = re.sub(r'\n','',line)
     fields = newline.split('\t')
-    #if not re.match('UniProt',fields[0]):
-     #   continue
     taxon_id = fields[12].split(':')[1]
     
     if pubmed_option == 'no' and fields[5] == '':
         continue
 
     paper_id = fields[5].split(':')[1]
-
 
     if tax_id_name_mapping.has_key(taxon_id):
         organism = re.sub(r' ','_',tax_id_name_mapping[taxon_id])
@@ -300,19 +353,13 @@ for line in t2_handle:
             if protein_go_dict.has_key(fields[1]):
                 if protein_go_dict[fields[1]].has_key(fields[4]):
                     if fields[6] in EEC_user:
-                        paper_prot_freq[paper_id][fields[1]] = 1
                         paper_term[fields[1]][fields[4]].add(str(fields[5]))
                         print >> outfile_handle, fields[1] + '\t' + fields[4] + '\t' + paper_id + '\t' + fields[6] + '\t' + fields[8] + '\t' + fields[-1] + '\t' + organism
                         count = 1
-                    #if fields[6] in EEC_user and fields[8] in ONT_user and organism in ORG_user and fields[-1] in source_user:
-                     #   if annotation_confidence == 'yes':
-                      #      count = 1
-                       #     print >> outfile_handle, fields[1] + '\t' + fields[4] + '\t' + paper_id + '\t' + fields[8] + '\t' + fields[-1]
-                        #else:
-                         #   count = 1
+                        if paper_prot_freq_index == 1:
+                            paper_prot_freq[paper_id][fields[1]] = 1
                         
-                           # print >> outfile_handle, fields[1] + '\t' + fields[4] + '\t' + paper_id + '\t' + fields[8] + '\t' + fields[-1]
-                    
+                        
         else:
             if fields[6] in EEC_user and fields[8] in ONT_user and organism in ORG_user and fields[-1] in source_user:
                 count = 1
@@ -329,15 +376,17 @@ if annotation_confidence == 'no':
         cols = newlines.split('\t')
         if paper_term.has_key(cols[0]):
             if paper_term[cols[0]].has_key(cols[1]):
-                if cols[4] in ONT_user and cols[-1] in ORG_user and cols[5] in source_user:                  
-                    if len(paper_term[cols[0]][cols[1]]) >= int(paper_threshold):
-                        print >> final_op_handle, cols[0] + '\t' + cols[1] + '\t' + cols[2] +'\t' + cols[3] + '\t' + cols[4]
+                if cols[4] in ONT_user and cols[-1] in ORG_user and cols[5] in source_user:
+                    if cols[2] not in black_set:
+                        if len(paper_term[cols[0]][cols[1]]) >= int(paper_threshold):
+                            print >> final_op_handle, cols[0] + '\t' + cols[1] + '\t' + cols[2] +'\t' + cols[3] + '\t' + cols[4]
 
-#calculate_statistics(outfile, final_op_file)
+calculate_statistics(outfile)
 
-for i in paper_prot_freq:
-    if len(paper_prot_freq[i]) >= int(bias_threshold):
-        print >> bias_paper_handle, i
+if paper_prot_freq_index == 1:
+    for i in paper_prot_freq:
+    #if len(paper_prot_freq[i]) >= int(bias_threshold):
+        print >> paper_ann_freq_handle, i + '\t' + str(len(paper_prot_freq[i]))
 
 if count == 1:
     print "Congratulations ! Your benchmark file has been created\n"

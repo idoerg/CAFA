@@ -102,7 +102,9 @@ def extract_downloads(download_dir, mode):
     
     return unzipped_file
 
-def plot_distributions(input_dict):
+def plot_distributions(input_dict, benchmark_file):
+    file_type = (benchmark_file.split('_')[-1]).split('.')[0]
+    pname = 'distribution_of_ontologies_in_' + benchmark_file.split('_')[-3] + '_' + benchmark_file.split('_')[-2] + '_' + file_type
     x_val = []
     y_val = []
     xTickNames = []
@@ -119,35 +121,44 @@ def plot_distributions(input_dict):
         index = index + 1
     py.bar(x_val,y_val,facecolor='red')
     py.xticks(np.arange(len(input_dict)), xTickNames)
-    #py.xlabel('Gene Ontology')
     py.ylabel('Frequency')
-    #frame1.axes.get_xaxis().set_visible(False)
-    #py.show()
+    fig.savefig(pname.strip()+'.png')
+    
     
 # Create plots to view dataset statistics
 
 def calculate_statistics(benchmark_file):
 
+    outfile_name = 'stats_file_for_' + benchmark_file.split('_')[-3] + '_' + benchmark_file.split('_')[-2] + '_' + benchmark_file.split('_')[-1]
     unique_prot = defaultdict(int)
     unique_ann = defaultdict(int)
     dist_ontologies = defaultdict(defaultdict)
     dist_organisms = defaultdict(defaultdict)
     
-    outfile = open('stats.txt', 'w')
+    outfile = open(outfile_name, 'w')
     file_handle = open(benchmark_file, 'r')
     for lines in file_handle:
         corr_lines = re.sub(r'\n','',lines)
         fields = corr_lines.split('\t')
+        if len(fields) < 7:
+            continue
         unique_prot[fields[0]] = 1
         unique_ann[fields[1]] = 1
         dist_ontologies[fields[4]][fields[1]] = 1
         dist_organisms[fields[-1]][fields[0]] = 1
 
-    print >> outfile, 'NumberOfProteins\tNumberOfAnnotations'
-    print >> outfile, str(len(unique_prot)) + '\t' + str(len(unique_ann))
+    print >> outfile, 'Number Of Unique Proteins in Benchmark set : \t' + str(len(unique_prot))
+    print >> outfile, 'Number Of Unique Annotations in Benchmark set : \t' + str(len(unique_ann))
+    #print >> outfile, str(len(unique_prot)) + '\t' + str(len(unique_ann))
+    print >> outfile, '**************************************'
+    print >> outfile, '**************************************'
 
-    plot_distributions(dist_ontologies)
-    #plot_distributions(dist_organisms)
+    print >> outfile, 'Organisms\tFrequency'
+    print >> outfile, '**************************************'
+    for key1 in dist_organisms:
+        print >> outfile, key1 + '\t' + str(len(dist_organisms[key1]))
+
+    plot_distributions(dist_ontologies, benchmark_file)
 
 # The first step with using the argparse module is to create a parser object that can then parse all the user inputs and convert them into python objects based on the user input types provided
 
@@ -265,8 +276,6 @@ for tax_lines in tax_file:
 #***********************************************************************************************
 # Now that the user arguments have been saved into python objects, the next step will be to parse the files according to the user parameters (stored above) and create a benchmark file. The 2 input files are currently of the same format as a uniprot-goa file. 
 
-
-
 index = 1
 outfile = 'Benchmark_for_' + t2_input_file.split('.')[1] + '_' + t2_input_file.split('.')[2] + '_' + str(index) + '_default.txt'
 
@@ -299,6 +308,7 @@ elif not t1_input_file == '':
         if cols[6] == 'IEA':
             protein_go_dict[cols[1]][cols[4]] = 1
 
+black_set = set()
 pubmed_option = raw_input('Do you wanna include GO terms that do not have a PubMed reference associated with them : ')
 
 annotation_confidence = raw_input('Do you wanna include annotations that appear in few papers : ')
@@ -306,9 +316,12 @@ annotation_confidence = raw_input('Do you wanna include annotations that appear 
 if annotation_confidence == 'no':
     paper_threshold = raw_input('What is your threshold for the minimum number of papers : ')
     paper_term = defaultdict(lambda:defaultdict(set))
+    annotation_conf_index = 1
+else:
+    annotation_conf_index = 0
 
-if not os.path.exists('list_papers_with_annotation_frequency.txt'):
-    paper_annotation_freq  = 'list_papers_with_annotation_frequency.txt'
+if not os.path.exists('papers_with_annotation_frequency_for_' + t2_input_file.split('.')[2] + '_' + str(index) + '.txt'):
+    paper_annotation_freq  = 'papers_with_annotation_frequency_' + t2_input_file.split('.')[2] + '_' + str(index) + '.txt'
     paper_ann_freq_handle = open(paper_annotation_freq, 'w')
     paper_prot_freq = defaultdict(defaultdict)
     paper_prot_freq_index = 1
@@ -327,12 +340,17 @@ for line in t2_handle:
         continue
     newline = re.sub(r'\n','',line)
     fields = newline.split('\t')
+    if len(fields) < 15:
+        continue
     taxon_id = fields[12].split(':')[1]
     
     if pubmed_option == 'no' and fields[5] == '':
         continue
 
-    paper_id = fields[5].split(':')[1]
+    if fields[5] != '':
+        paper_id = fields[5].split(':')[1]
+    else:
+        paper_id = ' '
 
     if tax_id_name_mapping.has_key(taxon_id):
         organism = re.sub(r' ','_',tax_id_name_mapping[taxon_id])
@@ -353,9 +371,11 @@ for line in t2_handle:
             if protein_go_dict.has_key(fields[1]):
                 if protein_go_dict[fields[1]].has_key(fields[4]):
                     if fields[6] in EEC_user:
-                        paper_term[fields[1]][fields[4]].add(str(fields[5]))
                         print >> outfile_handle, fields[1] + '\t' + fields[4] + '\t' + paper_id + '\t' + fields[6] + '\t' + fields[8] + '\t' + fields[-1] + '\t' + organism
                         count = 1
+                        if annotation_conf_index == 1:
+                            paper_term[fields[1]][fields[4]].add(str(fields[5]))
+                        
                         if paper_prot_freq_index == 1:
                             paper_prot_freq[paper_id][fields[1]] = 1
                         
@@ -366,7 +386,7 @@ for line in t2_handle:
                 print >> outfile_handle, fields[1] + '\t' + fields[4] + '\t' + paper_id + '\t' + fields[8] + '\t' + fields[-1]
 
 
-final_op_file = 'Benchmark_for_' + t2_input_file.split('.')[1] + '_' + t2_input_file.split('.')[2] + '_' + str(index) + '_with_strong_confidence.txt' 
+final_op_file = 'Benchmark_for_' + t2_input_file.split('.')[1] + '_' + t2_input_file.split('.')[2] + '_' + str(index) + '_confident.txt' 
 final_op_handle = open(final_op_file, 'w')
 
 if annotation_confidence == 'no':
@@ -374,18 +394,31 @@ if annotation_confidence == 'no':
     for lines in ann_conf_handle:
         newlines = re.sub(r'\n','',lines)
         cols = newlines.split('\t')
+        if len(cols) < 7:
+            continue
         if paper_term.has_key(cols[0]):
             if paper_term[cols[0]].has_key(cols[1]):
-                if cols[4] in ONT_user and cols[-1] in ORG_user and cols[5] in source_user:
+                if cols[4] in ONT_user and cols[-1] in ORG_user and cols[5] in source_user and len(paper_term[cols[0]][cols[1]]) >= int(paper_threshold):
                     if cols[2] not in black_set:
-                        if len(paper_term[cols[0]][cols[1]]) >= int(paper_threshold):
-                            print >> final_op_handle, cols[0] + '\t' + cols[1] + '\t' + cols[2] +'\t' + cols[3] + '\t' + cols[4]
+                         print >> final_op_handle, cols[0] + '\t' + cols[1] + '\t' + cols[2] +'\t' + cols[3] + '\t' + cols[4] + '\t' + cols[5] + '\t' + cols[6]
 
+elif annotation_confidence == 'yes':
+    ann_conf_handle = open(outfile, 'r')
+    for lines in ann_conf_handle:
+        newlines = re.sub(r'\n','',lines)
+        cols = newlines.split('\t')
+        if len(cols) != 7:
+            continue
+        
+        if cols[4] in ONT_user and cols[-1] in ORG_user and cols[5] in source_user:
+            if cols[2] not in black_set:
+                print >> final_op_handle, cols[0] + '\t' + cols[1] + '\t' + cols[2] +'\t' + cols[3] + '\t' + cols[4] + '\t' + cols[5] + '\t' + cols[6]
+                    
 calculate_statistics(outfile)
+calculate_statistics(final_op_file)
 
 if paper_prot_freq_index == 1:
     for i in paper_prot_freq:
-    #if len(paper_prot_freq[i]) >= int(bias_threshold):
         print >> paper_ann_freq_handle, i + '\t' + str(len(paper_prot_freq[i]))
 
 if count == 1:
@@ -394,6 +427,5 @@ else:
     print "Sorry ! The parameters did not match any benchmark protein\n"
     os.remove(outfile)
     os.remove(final_op_file)
-
 
     

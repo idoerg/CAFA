@@ -144,7 +144,7 @@ def calculate_statistics(benchmark_file):
     dist_ontologies = defaultdict(defaultdict)
     dist_organisms = defaultdict(defaultdict)
     
-    cvs_outfile = open(outfile_name, 'w')
+    outfile = open(outfile_name, 'w')
     file_handle = open(benchmark_file, 'r')
     for lines in file_handle:
         corr_lines = re.sub(r'\n','',lines)

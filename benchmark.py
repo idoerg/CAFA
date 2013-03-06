@@ -28,6 +28,7 @@ def ftp_download(time_point, mode):
         remote_dir = 'pub/databases/GO/goa/UNIPROT'
     else:
         [month,year] = time_point.split('_')
+        month = month.capitalize()
         remote_dir = 'pub/databases/GO/goa/old/UNIPROT'
     
     ftp.cwd(remote_dir)
@@ -43,6 +44,7 @@ def ftp_download(time_point, mode):
             else:
                 shutil.rmtree('./' + ftp_dir + '/')
                 os.makedirs('./'+ ftp_dir + '/')
+            download_status = 1
             print "Downloading files from uniprot-goa ......."
             filename = terms[-1]
             local_filename = os.path.join('./'+ ftp_dir + '/' + filename)
@@ -107,21 +109,27 @@ def plot_distributions(input_dict, benchmark_file):
     pname = 'distribution_of_ontologies_in_' + benchmark_file.split('_')[-3] + '_' + benchmark_file.split('_')[-2] + '_' + file_type
     x_val = []
     y_val = []
+    x = range(len(input_dict))
     xTickNames = []
-    index = 1
+    index = 0
 
     fig = py.figure()
-    ax = py.gca()
-    ax.xaxis.set_major_locator(MaxNLocator(4))
+    py.ylabel('Frequency')
     
     for key1 in input_dict:
         x_val.append(index)
         y_val.append(len(input_dict[key1]))
-        xTickNames.append(key1)
+        if key1 == 'F':
+            xTickNames.append('Molecular_Function')
+        elif key1 == 'P':
+            xTickNames.append('Biological_Process')
+        elif key1 == 'C':
+            xTickNames.append('Cellular_Component')
         index = index + 1
-    py.bar(x_val,y_val,facecolor='red')
-    py.xticks(np.arange(len(input_dict)), xTickNames)
-    py.ylabel('Frequency')
+    py.bar(x_val,y_val,facecolor='red', width=0.25, align='center')
+    py.xticks(x, xTickNames)
+    
+    fig.autofmt_xdate()
     fig.savefig(pname.strip()+'.png')
     
     
@@ -130,12 +138,13 @@ def plot_distributions(input_dict, benchmark_file):
 def calculate_statistics(benchmark_file):
 
     outfile_name = 'stats_file_for_' + benchmark_file.split('_')[-3] + '_' + benchmark_file.split('_')[-2] + '_' + benchmark_file.split('_')[-1]
+    #outfile_name.replace('txt','csv')
     unique_prot = defaultdict(int)
     unique_ann = defaultdict(int)
     dist_ontologies = defaultdict(defaultdict)
     dist_organisms = defaultdict(defaultdict)
     
-    outfile = open(outfile_name, 'w')
+    cvs_outfile = open(outfile_name, 'w')
     file_handle = open(benchmark_file, 'r')
     for lines in file_handle:
         corr_lines = re.sub(r'\n','',lines)
@@ -166,33 +175,43 @@ print "Welcome to the Benchmark Creation tool !!!!!"
 print "*************************************************"
 
 parser = argparse.ArgumentParser(prog='benchmark.py',description='Creates a set of benchmark proteins')
-parser.add_argument('-ORG','--Organism',nargs='+', default='all',help='Specifies a set of organisms (multiple organisms to be separated by space) whose proteins will be considered for benchmarking. Default is all organisms')
-parser.add_argument('-ONT','--Ontology',nargs='+', default='all',help='Specifies the set of ontologies(multiple ontologies to be separated by space) to be used. By default, all 3 ontologies will be used. Default is all 3 ontologies')
-parser.add_argument('-EVI','--Evidence',nargs='+', default='all',help='Specifies the evidence codes to be considered (multiple codes separated by space). By default, all experimentally validated evidence codes (as per GO standards) will be considered. Default is all experimental evidence codes')
-parser.add_argument('--CafaMode',action='store', default=False ,help='Specifies whether a user is a CAFA participant or not (True/False). Default is False')
+parser.add_argument('-O','--organism',nargs='+', default='all',help='Specifies a set of organisms (multiple organisms to be separated by space) whose proteins will be considered for benchmarking. Default is all organisms')
+parser.add_argument('-N','--ontology',nargs='+', default='all',help='Specifies the set of ontologies(multiple ontologies to be separated by space) to be used. By default, all 3 ontologies will be used. Default is all 3 ontologies')
+parser.add_argument('-V','--evidence',nargs='+', default='all',help='Specifies the evidence codes to be considered (multiple codes separated by space). By default, all experimentally validated evidence codes (as per GO standards) will be considered. Default is all experimental evidence codes')
+parser.add_argument('--cafa',action='store', default=False ,help='Specifies whether a user is a CAFA participant or not (True/False). Default is False')
 parser.add_argument('--t1',action='store',help='Specifies the path to a Target file (either CAFA Targets File or any other. If not specified, defaults to None')
 parser.add_argument('--t2',action='store' ,help='Specifies either the path to a file with experimental evidence codes or mentions a version in MM_YYYY format (for eg: Dec_2006)to be downloaded.If not specified, defaults to None')
-parser.add_argument('--sourceDB',action='store' ,nargs='+',default='all',help='Provides filter options on the datbaases that assigned a particular annotation. If not specified, the program returns results from all sources.')
+parser.add_argument('-S', '--source',action='store' ,nargs='+',default='all',help='Provides filter options on the datbaases that assigned a particular annotation. If not specified, the program returns results from all sources.')
 
 args = parser.parse_args()
 
-if args.Organism:
-    user_organism = args.Organism
-elif args.ORG:
-    user_organism = args.ORG
+if args.organism :
+    user_organism = args.organism
+elif args.O:
+    user_organism = args.O
+else:
+    user_organism = 'all'
 
-if args.Ontology:
-    user_ontology = args.Ontology
-elif args.ONT:
-    user_ontology = args.ONT
+if args.ontology:
+    user_ontology = args.ontology
+elif args.N:
+    user_ontology = args.N
+else:
+    user_ontology = 'all'
 
-if args.Evidence:
-    user_evidence = args.Evidence
-elif args.EVI:
-    user_evidence = args.EVI
+if args.evidence:
+    user_evidence = args.evidence
+elif args.V:
+    user_evidence = args.V
+else:
+    user_evidence = 'all'
 
-cafa_user = args.CafaMode
-source = args.sourceDB
+cafa_user = args.cafa
+
+if args.source:
+    source = args.source
+elif args.S:
+    source = args.S
 
 t1_ftp_dir = ''
 t2_ftp_dir = ''
@@ -207,6 +226,9 @@ outfile_handle = ''
 if cafa_user == 'True':
     if not args.t1 == None: 
         cafa_input_file = args.t1
+    elif args.t1 == '':
+        print "Enter a valid filename"
+        sys.exit(1)
     else:
         print "Please enter a valid t1 File"
         sys.exit(1)
@@ -217,9 +239,19 @@ else:
             t1_ftp_dir = ftp_download(args.t1,mode)
             t1_input_file = extract_downloads(t1_ftp_dir, mode)
             t1_handle = open('./t1_ftp_dir/' + t1_input_file, 'r')
+        elif re.match('current', args.t1, re.IGNORECASE):
+            t1_ftp_dir = ftp_download(args.t1,mode)
+            t1_input_file = extract_downloads(t1_ftp_dir, mode)
+            t1_handle = open('./t1_ftp_dir/' + t1_input_file, 'r')
         else:
             t1_input_file = args.t1
             t1_handle = open(t1_input_file, 'r')
+    elif args.t1 == '':
+        print "Please enter a valid file name"
+        sys.exit(1)
+    else:
+        print "Please enter a valid file name"
+        sys.exit(1)
 
 if not args.t2 == None:
     mode = 1
@@ -227,9 +259,16 @@ if not args.t2 == None:
         t2_ftp_dir = ftp_download(args.t2,mode)
         t2_input_file = extract_downloads(t2_ftp_dir, mode)
         t2_handle = open('./t2_ftp_dir/' + t2_input_file ,'r')
+    elif re.match('current', args.t2, re.IGNORECASE):
+        t2_ftp_dir = ftp_download(args.t2,mode)
+        t2_input_file = extract_downloads(t2_ftp_dir, mode)
+        t2_handle = open('./t2_ftp_dir/' + t2_input_file ,'r')
     else:
         t2_input_file = args.t2
         t2_handle = open(t2_input_file ,'r')
+elif args.t2 == '' :
+    print "Please enter a valid file name"
+    sys.exit(1)
 else:
     print "Please enter a valid uniprot-goa Experimental File"
     sys.exit(1)
@@ -240,20 +279,32 @@ else:
 
 EEC_default = set(['EXP','IDA','IPI','IMP','IGI','IEP'])
 
-if not (user_organism == 'all') or ('all' in user_organism):
+if len(user_organism) == 1 and user_organism[0] == '':
+    ORG_user = set()
+elif (user_organism == 'all') or ('all' in user_organism):
+    ORG_user = set()
+else:
     ORG_user = set(user_organism)
 
-if not (source == 'all') or ('all' in source):
+if len(source) == 1 and source[0] == '':
+    source_user = set()
+elif (source == 'all') or ('all' in source):
+    source_user = set()
+else:
     source_user = set(source)
 
 # For Ontology
-if (user_ontology == 'all') or ('all' in user_ontology):
+if len(user_ontology) == 1 and user_ontology[0] == '':
+    ONT_user = set(['F','P','C'])
+elif (user_ontology == 'all') or ('all' in user_ontology):
     ONT_user = set(['F','P','C'])
 else:
     ONT_user = set(user_ontology)
 
 # For Evidence
-if (user_evidence == 'all') or ('all' in user_evidence):
+if len(user_evidence) == 1 and user_evidence[0] == '':
+    EEC_user = set(['EXP','IDA','IPI','IMP','IGI','IEP'])
+elif (user_evidence == 'all') or ('all' in user_evidence):
     EEC_user = set(['EXP','IDA','IPI','IMP','IGI','IEP'])
 else:
     EEC_user = set(user_evidence)
@@ -277,13 +328,24 @@ for tax_lines in tax_file:
 # Now that the user arguments have been saved into python objects, the next step will be to parse the files according to the user parameters (stored above) and create a benchmark file. The 2 input files are currently of the same format as a uniprot-goa file. 
 
 index = 1
-outfile = 'Benchmark_for_' + t2_input_file.split('.')[1] + '_' + t2_input_file.split('.')[2] + '_' + str(index) + '_default.txt'
+if len(t2_input_file.split('.')) == 3:
+    outfile = 'Benchmark_for_' + t2_input_file.split('.')[1] + '_' + t2_input_file.split('.')[2] + '_' + str(index) + '_default.txt'
+elif len(t2_input_file.split('.')) == 2:
+    outfile = 'Benchmark_for_' + t2_input_file.split('.')[1] + '_' + 'current' + '_' + str(index) + '_default.txt'
 
 while os.path.exists(outfile):
     index = index + 1
-    outfile = 'Benchmark_for_' + t2_input_file.split('.')[1] + '_' + t2_input_file.split('.')[2] + '_' + str(index) + '_default.txt'
+    if len(t2_input_file.split('.')) == 3:
+        outfile = 'Benchmark_for_' + t2_input_file.split('.')[1] + '_' + t2_input_file.split('.')[2] + '_' + str(index) + '_default.txt'
+    elif len(t2_input_file.split('.')) == 2:
+        outfile = 'Benchmark_for_' + t2_input_file.split('.')[1] + '_' + 'current' + '_' + str(index) + '_default.txt'
 
 outfile_handle = open(outfile,'w')
+
+if len(t2_input_file.split('.')) == 3:
+    version_number = t2_input_file.split('.')[2]
+elif len(t2_input_file.split('.')) == 2:
+    version_number = 'current'
 
 count = 0
 
@@ -320,8 +382,8 @@ if annotation_confidence == 'no':
 else:
     annotation_conf_index = 0
 
-if not os.path.exists('papers_with_annotation_frequency_for_' + t2_input_file.split('.')[2] + '_' + str(index) + '.txt'):
-    paper_annotation_freq  = 'papers_with_annotation_frequency_' + t2_input_file.split('.')[2] + '_' + str(index) + '.txt'
+if not os.path.exists('papers_with_annotation_frequency_for_' + version_number + '_' + str(index) + '.txt'):
+    paper_annotation_freq  = 'papers_with_annotation_frequency_' + version_number + '_' + str(index) + '.txt'
     paper_ann_freq_handle = open(paper_annotation_freq, 'w')
     paper_prot_freq = defaultdict(defaultdict)
     paper_prot_freq_index = 1
@@ -355,17 +417,24 @@ for line in t2_handle:
     if tax_id_name_mapping.has_key(taxon_id):
         organism = re.sub(r' ','_',tax_id_name_mapping[taxon_id])
         
-        if args.Organism == 'all':
+        if (user_organism == 'all')  or ('all' in user_organism) or (user_organism[0] == ''):
             ORG_user.add(organism)
-        if args.sourceDB == 'all':
+        if (source == 'all') or ('all' in source) or (source[0] == ''):
             source_user.add(fields[-1])
 
         if not cafa_handle == '':
             if protein_dict.has_key(fields[1]):
-                if fields[6] in EEC_user and fields[8] in ONT_user and organism in ORG_user and fields[-1] in source_user:
+                if fields[6] in EEC_user:
+                    print >> outfile_handle, fields[1] + '\t' + fields[4] + '\t' + paper_id + '\t' + fields[6] + '\t' + fields[8] + '\t' + fields[-1] + '\t' + organism
                     count = 1
-                    print >> outfile_handle, fields[1] + '\t' + fields[4] + '\t' + paper_id + '\t' +fields[8] + '\t' + fields[-1]
-                    ORG
+                    if annotation_conf_index == 1:
+                        paper_term[fields[1]][fields[4]].add(str(fields[5]))
+                        
+                    if paper_prot_freq_index == 1:
+                        paper_prot_freq[paper_id][fields[1]] = 1
+                #if fields[6] in EEC_user and fields[8] in ONT_user and organism in ORG_user and fields[-1] in source_user:
+                 #   count = 1
+                  #  print >> outfile_handle, fields[1] + '\t' + fields[4] + '\t' + paper_id + '\t' +fields[8] + '\t' + fields[-1]
 
         elif not t1_handle == '':
             if protein_go_dict.has_key(fields[1]):
@@ -386,7 +455,7 @@ for line in t2_handle:
                 print >> outfile_handle, fields[1] + '\t' + fields[4] + '\t' + paper_id + '\t' + fields[8] + '\t' + fields[-1]
 
 
-final_op_file = 'Benchmark_for_' + t2_input_file.split('.')[1] + '_' + t2_input_file.split('.')[2] + '_' + str(index) + '_confident.txt' 
+final_op_file = 'Benchmark_for_' + t2_input_file.split('.')[1] + '_' + version_number + '_' + str(index) + '_confident.txt' 
 final_op_handle = open(final_op_file, 'w')
 
 if annotation_confidence == 'no':
@@ -427,5 +496,3 @@ else:
     print "Sorry ! The parameters did not match any benchmark protein\n"
     os.remove(outfile)
     os.remove(final_op_file)
-
-    

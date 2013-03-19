@@ -14,21 +14,20 @@ def parse(t2, t1, ontos):
     for lines in t2_handle:
         fields = lines.strip().split('\t')
         if fields[1] == 'F':
-            #print 'hello'
             t2_dict_mfo[fields[0]].add(fields[2])
         elif fields[1] == 'P':
             t2_dict_bpo[fields[0]].add(fields[2])
         elif fields[1] == 'C':
             t2_dict_cco[fields[0]].add(fields[2])
-        #if (not ontos) or (fields[1] in ontos):            
-            #t2_dict[fields[0]][fields[1]].add(fields[2])
             
 
     t2_handle.close()
 
     bench_dict = defaultdict(lambda:defaultdict())
 
-    outfile = open(t2 + '_benchmark_set.txt' , 'w')
+    outfile = open(t2 + '_bench.txt' , 'w')
+
+    print 'Creating benchmark set'
 
     t1_handle = open(t1, 'r')
     for lines in t1_handle:

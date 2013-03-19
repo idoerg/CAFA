@@ -4,9 +4,7 @@ from collections import defaultdict
 import re
 import os
 
-EEC_default = set(['EXP','IDA','IPI','IMP','IGI','IEP'])
-
-def parse_tax_file(tax_filename='names.dmp'):
+def parse_tax_file(tax_filename=''):
     tax_id_name_mapping = defaultdict(int)
 
     tax_file = open(tax_filename,'r')
@@ -22,13 +20,13 @@ def parse_tax_file(tax_filename='names.dmp'):
     return tax_id_name_mapping
 
 
-def t2_filter(t2_file, ontos=set(['P','F','C']),eco_list=EEC_default,taxids=set([]), pubmed='no', blacklist=set([]), ann_freq=defaultdict(lambda:defaultdict(lambda:set())), paper_threshold=0):
+def t2_filter(t2_file, ontos=set([]),eco_list=set([]),taxids=set([]), pubmed='no', blacklist=set([]), ann_freq=defaultdict(lambda:defaultdict(lambda:set())), paper_threshold=0, tax_filename=''):
 
     t2_handle = open(t2_file, 'r')
-
-    tax_filename = 'names.dmp'
     tax_id_name_mapping = parse_tax_file(tax_filename)
-        
+
+    print 'Parsing ' + t2_file
+
     outfile  = open(t2_file + ".exponly","w")
     for inline in t2_handle:
         if inline.startswith('!'):
@@ -51,7 +49,6 @@ def t2_filter(t2_file, ontos=set(['P','F','C']),eco_list=EEC_default,taxids=set(
         if pubmed == 'no' and inrec[5] == '':
             continue
         
-        #print 'helo'
         if (len(ann_freq) == 0) or (len(ann_freq[fields[1]][fields[4]]) >= paper_threshold):
             ann_ok = True
         if not inrec[5] in blacklist:
@@ -65,12 +62,14 @@ def t2_filter(t2_file, ontos=set(['P','F','C']),eco_list=EEC_default,taxids=set(
         if tax_ok and eco_ok and onto_ok and ann_ok and pap_ok:
             outfile.write(str(inrec[1]) + '\t' + str(inrec[8]) + '\t' + str(inrec[4]) + '\n')
     outfile.close()
+    tax_id_name_mapping.clear()
 
 def t1_filter_pass1(t1_file,ontos, taxids,
-                    eco_iea=set(['IEA']),eco_exp=EEC_default):
+                    eco_iea=set([]),eco_exp=set([]), tax_filename=''):
 
-    tax_filename = 'names.dmp'
     tax_id_name_mapping = parse_tax_file(tax_filename)
+
+    print 'Parsing ' + t1_file
 
     t1_handle = open(t1_file, 'r')
 
@@ -106,6 +105,7 @@ def t1_filter_pass1(t1_file,ontos, taxids,
 
     outfile_exp.close()
     outfile_iea.close()
+    tax_id_name_mapping.clear()
 
 def t1_filter_pass2(t1_exp_file,t1_iea_file):
     exp_pid_dict = defaultdict(lambda:defaultdict())

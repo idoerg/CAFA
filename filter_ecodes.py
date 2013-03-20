@@ -43,15 +43,17 @@ def t2_filter(t2_file, ontos=set([]),eco_list=set([]),taxids=set([]), pubmed='no
         taxid = inrec[12].split(':')[1]
         if tax_id_name_mapping.has_key(taxid):
             organism = re.sub(r' ','_',tax_id_name_mapping[taxid])
-            
-        #paper_id = inrec[5].split(':')[1]
         
         if pubmed == 'no' and inrec[5] == '':
             continue
-        
-        if (len(ann_freq) == 0) or (len(ann_freq[fields[1]][fields[4]]) >= paper_threshold):
+        if not inrec[5] == '':
+            paper_id = inrec[5].split(':')[1]
+        else:
+            paper_id = ''
+
+        if (len(ann_freq) == 0) or (len(ann_freq[inrec[1]][inrec[4]]) >= int(paper_threshold)):
             ann_ok = True
-        if not inrec[5] in blacklist:
+        if not paper_id in blacklist:
             pap_ok = True
         if eco_term in eco_list:
             eco_ok = True

@@ -50,6 +50,9 @@ parser.add_argument('-S', '--source',action='store' ,nargs='+',default=['all'],h
 args = parser.parse_args()
 
 work_dir = ConfigParam['workdir']
+if not os.path.exists(work_dir):
+    os.makedirs(work_dir)
+
 parsed_dict = argParser.parse(args)
 
 if parsed_dict['user_mode'] == 'True':
@@ -60,6 +63,7 @@ else:
     t2 = parsed_dict['t2']
 
 t1_input_file = work_dir + '/' + CreateDataset.parse(t1, ConfigParam)
+print t1_input_file
 t1_handle = open(t1_input_file, 'r')
 
 t2_input_file = work_dir + '/' + CreateDataset.parse(t2, ConfigParam)

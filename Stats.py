@@ -5,22 +5,18 @@ import sys
 import re
 from matplotlib import pyplot as py
 from collections import defaultdict
-#import ConfigParser
 import subprocess
-
-#Config = ConfigParser.ConfigParser()
-#Config.read('config.rc')
-#host_url = Config.get('SEQUENCE', 'BASE_URL')
+import urllib
 
 def plot_stats(benchmark_file, host_url=''):
     x_val = []
     y_val = []
     dist_ontology = defaultdict(lambda:defaultdict())
     unique_proteins = defaultdict()
-    pname = benchmark_file.replace('.txt', '.png')
+    pname = benchmark_file + '.png'
     xTickNames = []
     index = 0
-    response = ''
+    response = None
     fig = py.figure()
     py.ylabel('Frequency')
 
@@ -50,27 +46,34 @@ def plot_stats(benchmark_file, host_url=''):
     fig.savefig(pname.strip())
 
     dist_ontology.clear()
-
-    benchmark_file = benchmark_file.replace('_benchmark_set.txt', '')
     outfile = benchmark_file + '.sequence.fasta'
+    outfile_handle = open(outfile, 'a')
 
     NumOfProts = len(unique_proteins)
 
-    if NumOfProts > 3000 :
-        reponse = raw_input('Downloading ' + str(NumOfProts) + ' sequences may take a while. Type yes to continue or no to exit : ')
-        if response == 'yes':
+    if NumOfProts > 500 :
+        response = raw_input('Downloading ' + str(NumOfProts) + ' sequences might take a while. Type y to continue or n to exit : ')
+        
+        if response == 'y':
             print 'Creating fasta file of benchmark protein sequences.'
             for prots in unique_proteins:
-                download_cmd = 'wget -qO- ' + host_url + prots + '.fasta ' + '>>' + outfile
-                subprocess.call([download_cmd], shell=True)
-        elif response == 'no':
-            print 'Thank you for using the benchmark creator software.'
-            sys.exit(1)
+                download_cmd = 'http://' + host_url + '?query=id:' + prots + '&format=fasta'                 
+                urllib.urlretrieve(download_cmd, 'protein_sequence.fasta')
+                subprocess.call(['cat -s protein_sequence.fasta ' + '>> ' + outfile], shell=True) 
+            os.remove('protein_sequence.fasta')
+        #else:
+         #   print 'Thank you for using the benchmark creator software.'
+          #  sys.exit(1)
     else:
+        print 'Creating fasta file of benchmark protein sequences.'
         for prots in unique_proteins:
-            download_cmd = 'wget -qO- ' + host_url + prots + '.fasta ' + '>>' + outfile
-            subprocess.call([download_cmd], shell=True)
+            download_cmd = 'http://' + host_url + '?query=id:' + prots + '&format=fasta'                 
+            urllib.urlretrieve(download_cmd, 'protein_sequence.fasta')
+            subprocess.call(['cat -s protein_sequence.fasta ' + '>> ' + outfile], shell=True) 
+        os.remove('protein_sequence.fasta')
+
+    
 
 if __name__ == '__main__' :
     infile = sys.argv[1]
-    plot_stats(infile)
+    plot_stats(infile, host_url='www.uniprot.org/uniprot/')

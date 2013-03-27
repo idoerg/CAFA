@@ -34,7 +34,7 @@ def create():
     outfile_handle.write('\n')
 
     outfile_handle.write('[SEQUENCE]\n')
-    outfile_handle.write('BASE_URL : www.uniprot.org/uniprot\n')
+    outfile_handle.write('BASE_URL : www.uniprot.org/uniprot/\n')
 
     outfile_handle.write('\n')
 

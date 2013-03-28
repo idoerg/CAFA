@@ -54,7 +54,7 @@ def parse(infile, ConfigParam=defaultdict):
     else:
         input_basename = basename(infile)
         if os.path.exists(work_dir + '/' + input_basename):
-            t1_input_file = infile
+            t1_input_file = input_basename
         else:
             print infile + ' is not available in your working directory.'
             sys.exit(1)

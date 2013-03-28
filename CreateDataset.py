@@ -14,6 +14,7 @@ def parse(infile, ConfigParam=defaultdict):
     date_regex = ConfigParam['ftp_date']
     file_start_regex = ConfigParam['ftp_file_start']
     work_dir = ConfigParam['workdir']
+    t1_input_file = None
 
     if (re.match(date_regex,infile)) or (re.match('current', infile, re.IGNORECASE)):
 
@@ -43,7 +44,6 @@ def parse(infile, ConfigParam=defaultdict):
                 sys.exit()
 
         [download_status,down_filename] = FtpDownload.download(infile,ftp, remote_dir, work_dir)
-        ftp.quit()
         if download_status == 1:
             t1_input_file = Zipper.unzipper(down_filename, ConfigParam)
         elif download_status == -1:

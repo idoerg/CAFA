@@ -14,6 +14,7 @@ def download(time_point,ftp,remote_dir,work_dir):
     file_list = []
     download_status = 0
     filename = ''
+    file_found = 0
 
     ftp.cwd(remote_dir)
     ftp.dir('.', file_list.append)
@@ -43,8 +44,9 @@ def download(time_point,ftp,remote_dir,work_dir):
             
             filename = terms[-1]
             filesize = ftp.size(filename)
+            file_found = 1
 
-        if download_status == 0:
+        if download_status == 0 and file_found == 1:
             modified_filesize = float(filesize / 1024000000)
         #if modified_filesize > 1.0:
          #   print 'This is a ' + str(modified_filesize) + ' GB file. Downloading it might take a while. Please be patient!!!'
@@ -68,6 +70,7 @@ def download(time_point,ftp,remote_dir,work_dir):
             if not terms[-1].startswith('gene_association'):
                 continue
             if(terms[18] == month) and (terms[21] == year):
+                file_found = 1
                 unzipped_fname = terms[-1].replace('.gz', '')
                 if os.path.exists(work_dir + '/' + terms[-1]):
                     filename = terms[-1]
@@ -87,7 +90,7 @@ def download(time_point,ftp,remote_dir,work_dir):
                     filename = terms[-1]
                     filesize = ftp.size(filename)
 
-        if download_status == 0:
+        if download_status == 0 and file_found == 1:
             modified_filesize = float(filesize / 1024000000)
             #if modified_filesize > 1.0:
              #   print 'This is a ' + str(modified_filesize) + ' GB file. Downloading it might take a while. Please be patient!!!'

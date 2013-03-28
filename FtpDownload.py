@@ -43,20 +43,22 @@ def download(time_point,ftp,remote_dir,work_dir):
             
             filename = terms[-1]
             filesize = ftp.size(filename)
-        modified_filesize = float(filesize / 1024000000)
+
+        if download_status == 0:
+            modified_filesize = float(filesize / 1024000000)
         #if modified_filesize > 1.0:
          #   print 'This is a ' + str(modified_filesize) + ' GB file. Downloading it might take a while. Please be patient!!!'
-        local_filename = os.path.join(work_dir + '/' + filename)
-        progress = progressbar.AnimatedProgressBar(start=0, end=filesize, width=50)
-        print 'Downloading ' + filename
-        with open(local_filename, 'w') as outfile:
-            def callback(block):
-                outfile.write(block)
-                progress + len(block)
-                progress.show_progress()
+            local_filename = os.path.join(work_dir + '/' + filename)
+            progress = progressbar.AnimatedProgressBar(start=0, end=filesize, width=50)
+            print 'Downloading ' + filename
+            with open(local_filename, 'w') as outfile:
+                def callback(block):
+                    outfile.write(block)
+                    progress + len(block)
+                    progress.show_progress()
   
-            ftp.retrbinary('RETR '+filename, callback, 81920)
-        download_status = 1
+                ftp.retrbinary('RETR '+filename, callback, 81920)
+            download_status = 1
 
     else:
         for i in file_list:

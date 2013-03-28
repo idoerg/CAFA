@@ -12,7 +12,7 @@ def count(infile, EEC=set([]), ann_conf_filter=False, paper_conf_filter=False):
     print 'Creating paper-term frequency file.....'
 
     for line in infile_handle:
-        if line[0] == '!gaf-version':
+        if line[0] == '!':
             continue
         fields = line.strip().split('\t')
         if fields[5] != '' and fields[5].startswith('PMID'):

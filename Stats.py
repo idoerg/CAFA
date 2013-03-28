@@ -72,8 +72,6 @@ def plot_stats(benchmark_file, host_url=''):
             subprocess.call(['cat -s protein_sequence.fasta ' + '>> ' + outfile], shell=True) 
         os.remove('protein_sequence.fasta')
 
-    
-
 if __name__ == '__main__' :
     infile = sys.argv[1]
     plot_stats(infile, host_url='www.uniprot.org/uniprot/')

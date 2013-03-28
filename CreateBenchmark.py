@@ -117,9 +117,8 @@ def parse_cafa(t2_file, t1_file):
         if t2_dict_cco.has_key(uni_id):
             for term in t2_dict_cco[uni_id]:
                 print >> outfile, str(fields[0]) + '\t' + 'C' + '\t' + str(term)
+
     
-
-
 if __name__ == '__main__':
     exp_file = sys.argv[1]
     iea_file = sys.argv[2]

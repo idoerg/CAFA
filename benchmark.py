@@ -16,7 +16,6 @@ import ConfigParser
 import Config
 import Stats
 
-
 # The first step with using the argparse module is to create a parser object that can then parse all the user inputs and convert them into python objects based on the user input types provided
 
 print "*************************************************"
@@ -31,6 +30,10 @@ parser.add_argument('-C','--cafa', default='F' ,help='Specifies whether a user i
 parser.add_argument('-I1', '--i1', nargs='*', help='Specifies the path to a Target file (either CAFA Targets File or any other. If not specified, defaults to None')
 parser.add_argument('-I2', '--i2', nargs='*', help='Specifies either the path to a file with experimental evidence codes or mentions a version in MM_YYYY format (for eg: Dec_2006)to be downloaded.If not specified, defaults to None')
 parser.add_argument('-S', '--source',action='store' ,nargs='*',default=['all'],help='Provides filter options on the datbaases that assigned a particular annotation. If not specified, the program returns results from all sources.')
+parser.add_argument('-P', '--pubmed',default='F',help='Allows user to turn on the pubmed filter. If turned on, GO terms w/o any Pubmed references will not be considered part of the benchmark set.By default, it is turned off.')
+parser.add_argument('-F', '--confidence',default='F',help='Allows user to turn on the annotation confidence filter. If turned on, GO terms assignments to proteins that are documented in few papers (4 or less by default) will not be considered part of the benchmark set.By default, it is turned off.')
+parser.add_argument('-T', '--thresh',type=int, default=4,help='Allows users to specify a threshold for the minimum number of papers to be used for having a confident annotation. If not specified, defaults to a value of 4.')
+parser.add_argument('-B', '--blacklist', nargs='*',default=[], help='This parameter can take in a list of pubmed ids and all GO terms and proteins annotated in them will be eliminated from the benchmark set.Default is an empty list.')
 
 # Search for config file in the current directory
 fname_ind = 0
@@ -73,18 +76,19 @@ uniprot_path = ConfigParam['uniprot_path'] .rstrip('/')
 if not os.path.exists(work_dir):
     os.makedirs(work_dir)
 
-parsed_dict = ArgParser.parse(parser)
+parsed_dict = ArgParser.parse(parser, ConfigParam)
 
 t1 = parsed_dict['t1']
 t2 = parsed_dict['t2']
 
-pubmed_option = raw_input('Do you want to consider experimentally validated GO terms without a Pubmed reference to be included in the benchmarking process (y/n) : ')
-parsed_dict['pubmed'] = pubmed_option
+#pubmed_option = raw_input('Do you want to consider experimentally validated GO terms without a Pubmed reference to be included in the benchmarking process (y/n) : ')
+#parsed_dict['pubmed'] = pubmed_option
 
-annotation_confidence = raw_input('Do you want to consider low confidence annotations (these are GO term assignments to proteins that have been recorded in only few papers) (y/n) : ')
+#annotation_confidence = raw_input('Do you want to consider low confidence annotations (these are GO term assignments to proteins that have been recorded in only few papers) (y/n) : ')
 
-if annotation_confidence == 'n':
-    paper_threshold = raw_input('What is your threshold number of papers for cut off : ')
+if parsed_dict['user_conf'] == 'T':
+    paper_threshold = parsed_dict['user_thresh']
+    #paper_threshold = raw_input('What is your threshold number of papers for cut off : ')
     ann_conf_filter = True
 else:
     ann_conf_filter = False
@@ -99,7 +103,7 @@ else:
 t2_input_file = work_dir + '/' + CreateDataset.parse(t2, ConfigParam)
 
 
-black_set = set()
+#black_set = set()
 
 if not os.path.exists(t2_input_file + '_with_annotations_per_paper.txt'):
     paper_annotation_freq  = t2_input_file + '_with_annotations_per_paper.txt'
@@ -107,11 +111,11 @@ if not os.path.exists(t2_input_file + '_with_annotations_per_paper.txt'):
     paper_ann_freq_handle = open(paper_annotation_freq, 'w')
 else:
     paper_conf_filter = False
-    blacklist_papers = raw_input('Would you like to eliminate certain pubmed ids from being considered as part of the benchmark process ? If yes, enter a list of pubmed ids separated space. If no, leave blank.')
-    if not blacklist_papers == '':
-        pubmed_id = blacklist_papers.split(' ')
-        for i in pubmed_id:
-            black_set.add(i)
+  #  blacklist_papers = raw_input('Would you like to eliminate certain pubmed ids from being considered as part of the benchmark process ? If yes, enter a list of pubmed ids separated space. If no, leave blank.')
+   # if not blacklist_papers == '':
+    #    pubmed_id = blacklist_papers.split(' ')
+     #   for i in pubmed_id:
+      #      black_set.add(i)
 
 
 if ann_conf_filter or paper_conf_filter : 
@@ -127,7 +131,7 @@ else:
 
 # The next step is to parse t1 file into separate ontologies
 
-FilterDataset.t2_filter(t2_input_file, parsed_dict['user_ONT'], ConfigParam['exp_eec'], parsed_dict['user_ORG'], parsed_dict['user_source'], parsed_dict['pubmed'], black_set, ann_conf, paper_threshold, ConfigParam['tax_file'])
+FilterDataset.t2_filter(t2_input_file, parsed_dict['user_ONT'], parsed_dict['user_EVI'], parsed_dict['user_ORG'], parsed_dict['user_source'], parsed_dict['user_pubmed'], parsed_dict['black_set'], ann_conf, paper_threshold, ConfigParam['tax_file'])
 t2_exp = t2_input_file + '.exponly'
 
 if parsed_dict['user_mode'] == 'T':

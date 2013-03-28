@@ -1,5 +1,5 @@
 [WORKDIR]
-DEFAULT_PATH : .
+DEFAULT_PATH : ../CAFA_new/cafa
 
 [FTP]
 HOSTNAME : ftp.ebi.ac.uk
@@ -7,9 +7,9 @@ CURRENT_FILE_PATH : /pub/databases/GO/goa/UNIPROT
 OLD_FILE_PATH : /pub/databases/GO/goa/old/UNIPROT
 
 [DEFAULTS]
-EXP_EVIDENCE_CODES : set(['EXP','IDA','IPI','IMP','IGI','IEP'])
+EXP_EVIDENCE_CODES : set(['IEP', 'IPI', 'IMP', 'EXP', 'IGI', 'IDA'])
 IEA_EVIDENCE_CODES : set(['IEA'])
-ONTOLOGIES : set(['F','P','C'])
+ONTOLOGIES : set(['P', 'C', 'F'])
 TAXONOMY_FILENAME : names.dmp
 
 [SEQUENCE]

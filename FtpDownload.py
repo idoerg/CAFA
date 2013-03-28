@@ -115,6 +115,7 @@ def download(time_point,ftp,remote_dir,work_dir):
         elif time_point == 'no':
             sys.exit(1)
 
+
     return download_status, filename
 
 if __name__ == '__main__':

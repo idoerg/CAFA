@@ -22,7 +22,7 @@ def parse_tax_file(tax_filename=''):
     return tax_id_name_mapping
 
 
-def t2_filter(t2_file, ontos=set([]),eco_list=set([]),taxids=set([]), source=set([]), pubmed='y', blacklist=set([]), ann_freq=defaultdict(lambda:defaultdict(lambda:set())), paper_threshold=0, tax_filename=''):
+def t2_filter(t2_file, ontos=set([]),eco_list=set([]),taxids=set([]), source=set([]), pubmed='F', blacklist=set([]), ann_freq=defaultdict(lambda:defaultdict(lambda:set())), paper_threshold=0, tax_filename=''):
 
     t2_handle = open(t2_file, 'r')
     tax_id_name_mapping = parse_tax_file(tax_filename)
@@ -31,7 +31,7 @@ def t2_filter(t2_file, ontos=set([]),eco_list=set([]),taxids=set([]), source=set
 
     outfile  = open(t2_file + ".exponly","w")
     for inline in t2_handle:
-        if inline.startswith('!'):
+        if inline[0] == '!':
             continue
         tax_ok = False
         eco_ok = False
@@ -44,23 +44,24 @@ def t2_filter(t2_file, ontos=set([]),eco_list=set([]),taxids=set([]), source=set
         eco_term = inrec[6]
         onto = inrec[8]
         taxid = inrec[12].split(':')[1]
-        line_source = inrec[5].upper()
+        line_source = inrec[-1].upper()
 
         if tax_id_name_mapping.has_key(taxid):
             organism = tax_id_name_mapping[taxid]
         
-        if pubmed == 'n' and inrec[5] == '':
+        if pubmed == 'T' and inrec[5] == '':
             continue
         if not inrec[5] == '':
             paper_id = inrec[5].split(':')[1]
         else:
             paper_id = ''
 
+        
         if (len(ann_freq) == 0) or (len(ann_freq[inrec[1]][inrec[4]]) >= int(paper_threshold)):
             ann_ok = True
         if not str(paper_id) in blacklist:
             pap_ok = True
-        if eco_term in eco_list:
+        if (not eco_list) or eco_term in eco_list:
             eco_ok = True
         if (not taxids) or (organism in taxids) or (taxid in taxids):
             tax_ok = True
@@ -71,6 +72,8 @@ def t2_filter(t2_file, ontos=set([]),eco_list=set([]),taxids=set([]), source=set
         if tax_ok and eco_ok and onto_ok and ann_ok and pap_ok and source_ok:
             outfile.write(str(inrec[1]) + '\t' + str(inrec[8]) + '\t' + str(inrec[4]) + '\n')
 
+        if pap_ok == False:
+            print paper_id
     outfile.close()
     tax_id_name_mapping.clear()
 
@@ -119,7 +122,7 @@ def t1_filter_pass1(t1_file, t2_exp, eco_iea=set([]),eco_exp=set([])):
     for inline in t1_file_handle:
         eco_iea_ok = False
         eco_exp_ok = False
-        if inline.startswith('!'):
+        if inline[0] == '!':
             continue
         inrec = inline.strip().split('\t')
         eco_term = inrec[6]

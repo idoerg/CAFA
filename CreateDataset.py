@@ -63,7 +63,7 @@ def parse_cafa(infile):
 
     if infile.endswith('.fasta'):
         for lines in infile_handle:
-            if lines.startswith('>'):
+            if lines[0] == '>':
                 header = lines.strip().split(' ')[1]
                 target_prot = header.replace('(', '').replace(')', '')
                 print >> outfile_handle, target_prot

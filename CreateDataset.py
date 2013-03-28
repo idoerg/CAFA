@@ -53,28 +53,39 @@ def parse(infile, ConfigParam=defaultdict):
                 t1_input_file = down_filename
     else:
         input_basename = basename(infile)
+
         if os.path.exists(work_dir + '/' + input_basename):
             t1_input_file = input_basename
+        elif os.path.exists(infile):
+            shutil.move(infile,work_dir)
+            t1_input_file = basename(infile)
         else:
-            print infile + ' is not available in your working directory.'
+            print infile + ' is not available.'
             sys.exit(1)
 
     return t1_input_file
 
 
-def parse_cafa(infile):
+def parse_cafa(infile, ConfigParam=defaultdict()):
 
-    infile_basename = basename(infile)
-    if not os.path.exists(work_dir + '/' + infile_basename):
-        print infile + ' is not available in your working directory.'
+    work_dir = ConfigParam['workdir']
+    input_basename = basename(infile)
+
+    if os.path.exists(work_dir + '/' + input_basename):
+        t1_input_file = input_basename
+    elif os.path.exists(infile):
+        shutil.move(infile,work_dir)
+        t1_input_file = basename(infile)
+    else:
+        print infile + ' is not available.'
         sys.exit(1)
 
-    infile_handle = open(infile, 'r')
+    infile_handle = open(work_dir + '/' + t1_input_file, 'r')
 
-    outfile = infile + '.iea1'
+    outfile = t1_input_file + '.iea1'
     outfile_handle = open(outfile, 'w')
 
-    if infile.endswith('.fasta'):
+    if t1_input_file.endswith('.fasta'):
         for lines in infile_handle:
             if lines[0] == '>':
                 header = lines.strip().split(' ')[1]

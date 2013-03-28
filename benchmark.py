@@ -96,7 +96,7 @@ else:
 
 
 if parsed_dict['user_mode'] == 'T':
-    t1_input_file = work_dir + '/' + CreateDataset.parse_cafa(t1)
+    t1_input_file = work_dir + '/' + CreateDataset.parse_cafa(t1, ConfigParam)
 else:
     t1_input_file = work_dir + '/' + CreateDataset.parse(t1, ConfigParam)
 

@@ -13,7 +13,9 @@ def parse(parser, ConfigParam=defaultdict()):
     args, unknown = parser.parse_known_args()
 
     if len(unknown) > 0:
+        print '\n*********************************'
         print "Invalid Arguments"
+        print '*********************************\n'
         print parser.parse_args(['--help'])
 
     t1_file = ''
@@ -86,27 +88,42 @@ def parse(parser, ConfigParam=defaultdict()):
         user_source = set([])
 
     sys.stdout.write("\n")
+    sys.stdout.write("Pubmed : ")
 
     if args.pubmed:
         user_pubmed = args.pubmed
     else:
         user_pubmed = 'F'
 
+    sys.stdout.write(user_pubmed + '\n')
+    sys.stdout.write("Annotation Confidence : ")
+
     if args.confidence:
         user_conf = args.confidence
     else:
         user_conf = 'F'
+
+    sys.stdout.write(user_conf + '\n')
 
     if args.thresh:
         user_thresh = args.thresh
     else:
         user_thresh = 4
 
+    if not user_conf == 'F':
+        sys.stdout.write("Confidence : ")
+        sys.stdout.write(user_thresh + '\n')
+
+        
+    sys.stdout.write("Blacklisted Papers : ")
+
     if args.blacklist:
         black_set = set(args.blacklist)
+        [sys.stdout.write(x + ' ') for x in args.blacklist]
+        sys.stdout.write('\n')
     else:
         black_set = set([])
-    
+        sys.stdout.write('None\n')
 
     if args.i1:
         sys.stdout.write("T1 : ")
@@ -116,7 +133,9 @@ def parse(parser, ConfigParam=defaultdict()):
         else:
             t1_file = args.i1[0]
     else:
-        print 'Missing arguments'
+        print '\n*********************************'
+        print 'Missing T1 file'
+        print '********************************\n'
         print parser.parse_args(['--help'])
     
     sys.stdout.write(t1_file + '\n')
@@ -129,7 +148,9 @@ def parse(parser, ConfigParam=defaultdict()):
         else:
             t2_file = args.i2[0]
     else:
-        print 'Missing arguments'
+        print '\n*********************************'
+        print 'Missing T2 file'
+        print '*********************************\n'
         print parser.parse_args(['--help'])
 
     sys.stdout.write(t2_file + '\n')

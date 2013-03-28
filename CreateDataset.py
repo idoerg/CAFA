@@ -7,6 +7,7 @@ import FtpDownload
 import Zipper
 from collections import defaultdict
 from ftplib import FTP
+from os.path import basename
 
 def parse(infile, ConfigParam=defaultdict):
 
@@ -50,12 +51,23 @@ def parse(infile, ConfigParam=defaultdict):
             else:
                 t1_input_file = down_filename
     else:
-        t1_input_file = infile
+        input_basename = basename(infile)
+        if os.path.exists(work_dir + '/' + input_basename):
+            t1_input_file = infile
+        else:
+            print infile + ' is not available in your working directory.'
+            sys.exit(1)
 
     return t1_input_file
 
 
 def parse_cafa(infile):
+
+    infile_basename = basename(infile)
+    if not os.path.exists(work_dir + '/' + infile_basename):
+        print infile + ' is not available in your working directory.'
+        sys.exit(1)
+
     infile_handle = open(infile, 'r')
 
     outfile = infile + '.iea1'

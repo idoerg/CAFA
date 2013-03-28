@@ -111,9 +111,9 @@ def download(time_point,ftp,remote_dir,work_dir):
     if download_status == 1:
         print '\nSuccesfully downloaded files from uniprot-goa'
     elif download_status == -1:
-        print '\nFile to be downloaded already present in working directory'
+        print '\n ' + time_point + ' file to be downloaded already present in working directory'
     else:
-        print '\nThere is no file to be downloaded in the specified time point'
+        print '\nThere is no file to be downloaded for time point ' + time_point
         time_point = raw_input('Do you want to provide a different time point (either provide a time point or say no) : ')
         if (re.match('[a-zA-Z]+\_\d+',time_point)) or (re.match('current',time_point)):
             connect(time_point)

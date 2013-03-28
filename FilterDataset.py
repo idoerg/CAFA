@@ -72,8 +72,6 @@ def t2_filter(t2_file, ontos=set([]),eco_list=set([]),taxids=set([]), source=set
         if tax_ok and eco_ok and onto_ok and ann_ok and pap_ok and source_ok:
             outfile.write(str(inrec[1]) + '\t' + str(inrec[8]) + '\t' + str(inrec[4]) + '\n')
 
-        if pap_ok == False:
-            print paper_id
     outfile.close()
     tax_id_name_mapping.clear()
 

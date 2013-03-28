@@ -64,7 +64,7 @@ def plot_stats(benchmark_file, host_url=''):
         #else:
          #   print 'Thank you for using the benchmark creator software.'
           #  sys.exit(1)
-    else:
+    elif NumOfProts > 0:
         print 'Creating fasta file of benchmark protein sequences.'
         for prots in unique_proteins:
             download_cmd = 'http://' + host_url + '?query=id:' + prots + '&format=fasta'                 

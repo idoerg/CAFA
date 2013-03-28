@@ -134,6 +134,10 @@ else:
 FilterDataset.t2_filter(t2_input_file, parsed_dict['user_ONT'], parsed_dict['user_EVI'], parsed_dict['user_ORG'], parsed_dict['user_source'], parsed_dict['user_pubmed'], parsed_dict['black_set'], ann_conf, paper_threshold, ConfigParam['tax_file'])
 t2_exp = t2_input_file + '.exponly'
 
+if os.stat(t2_exp).st_size == 0:
+    print "Your benchmark set will be empty with the parameters provided."
+    sys.exit(1)
+
 if parsed_dict['user_mode'] == 'T':
     CreateBenchmark.parse_cafa(t2_exp, t1_input_file)
     filename = t2_exp + '_bench.txt'
@@ -156,9 +160,12 @@ else:
     while os.path.exists(t2_input_file + '.' + str(index) + '.benchmark'):
         index = index + 1
     output_filename = t2_input_file + '.' + str(index) + '.benchmark'
-    
-subprocess.call([ConfigParam['shell_script'] + ' ' + filename + ' ' + output_filename], shell=True)
-Stats.plot_stats(output_filename, uniprot_path)
+
+if os.stat(filename).st_size == 0:
+    print "Your benchmark set is empty."
+else:    
+    subprocess.call([ConfigParam['shell_script'] + ' ' + filename + ' ' + output_filename], shell=True)
+    Stats.plot_stats(output_filename, uniprot_path)
 
 print 'Cleaning working directory....'
 

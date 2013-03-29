@@ -1,0 +1,19 @@
+# This file lists a bunch of test queries to test the CAFA BC tool
+
+python benchmark.py --i1 sep_2006 --i2 apr_2007
+python benchmark.py --i1 sep_2006
+python benchmark.py --i1 sep_2006 --i2
+python benchmark.py --i1 --i2 apr_2007
+python benchmark.py --i1 sep_2006 --i2 current
+python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 current
+python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48
+python benchmark.py --i1 ./cafa/gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48
+python benchmark.py --i1 /home/raji/Documents/CAFA-master/cafa/gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48
+python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -O "saccharomyces cerevisiae"
+python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -O 4932
+python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -O 559292
+python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -N P
+python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -V IMP IPI
+python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -V IMP IPI -O 4932
+python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -S PDB
+python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -P T

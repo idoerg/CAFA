@@ -1,8 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
 import sys
 from collections import defaultdict
+import re
 
 def count(infile, EEC=set([]), ann_conf_filter=False, paper_conf_filter=False):
     paper_conf = defaultdict(lambda:defaultdict(set))
@@ -15,7 +16,7 @@ def count(infile, EEC=set([]), ann_conf_filter=False, paper_conf_filter=False):
         if line[0] == '!':
             continue
         fields = line.strip().split('\t')
-        if fields[5] != '' and fields[5].startswith('PMID'):
+        if not fields[5] == '' and re.match('^PMID', fields[5]):
             paper_id = fields[5].split(':')[1]
         
             if (not EEC) or (fields[6] in EEC):
@@ -28,7 +29,6 @@ def count(infile, EEC=set([]), ann_conf_filter=False, paper_conf_filter=False):
                     paper_conf[paper_id][fields[4]] = 1
     
     infile_handle.close()
-    print 'Done'
     return ann_conf, paper_conf
 
 

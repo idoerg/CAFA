@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
 import sys
@@ -9,9 +9,9 @@ def unzipper(infile, ConfigParam=defaultdict()):
     work_dir = ConfigParam['workdir']
 
     if not infile == '' :
+        unzip_file = infile.replace('.gz',  '')
         print 'Extracting file ' + infile
         os.system('gunzip ' + work_dir + '/' + infile)
-        unzip_file = infile.replace('.gz',  '')
 
     return unzip_file
     

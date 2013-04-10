@@ -1,4 +1,4 @@
-#!/usr/bin/python -W
+#!/usr/bin/env python
 
 import os
 import sys
@@ -125,13 +125,13 @@ def parse(parser, ConfigParam=defaultdict()):
         black_set = set([])
         sys.stdout.write('None\n')
 
-    if args.i1:
+    if args.input1:
         sys.stdout.write("T1 : ")
-        if len(args.i1) > 1:
+        if len(args.input1) > 1:
             print('Multiple inputs have been provided for t1 file')
             print parser.parse_args(['--help'])
         else:
-            t1_file = args.i1[0]
+            t1_file = args.input1[0]
     else:
         print '\n*********************************'
         print 'Missing T1 file'
@@ -140,13 +140,13 @@ def parse(parser, ConfigParam=defaultdict()):
     
     sys.stdout.write(t1_file + '\n')
 
-    if args.i2:
+    if args.input2:
         sys.stdout.write("T2 : ")
-        if len(args.i2) > 1:
+        if len(args.input2) > 1:
             print('Multiple inputs have been provided for t2 file')
             print parser.parse_args(['--help'])
         else:
-            t2_file = args.i2[0]
+            t2_file = args.input2[0]
     else:
         print '\n*********************************'
         print 'Missing T2 file'
@@ -154,6 +154,16 @@ def parse(parser, ConfigParam=defaultdict()):
         print parser.parse_args(['--help'])
 
     sys.stdout.write(t2_file + '\n')
+
+    if args.output:
+        if len(args.output) > 1:
+            print "Multiple names have been provided for output file"
+            print parser.parse_args(['--help'])
+        else:
+            outfile = args.output[0]
+    else:
+        outfile = ''
+    
     sys.stdout.write('*************************************************************************************\n')
 
     if t1_file == t2_file:
@@ -170,7 +180,8 @@ def parse(parser, ConfigParam=defaultdict()):
                  'user_thresh' : user_thresh,
                  'black_set' : black_set,
                  't1' : t1_file,
-                 't2' : t2_file
+                 't2' : t2_file,
+                 'outfile' : outfile
                  }
 
     return user_dict

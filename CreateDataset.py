@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
 import sys
@@ -8,6 +8,7 @@ import Zipper
 from collections import defaultdict
 from ftplib import FTP
 from os.path import basename
+import shutil
 
 def parse(infile, ConfigParam=defaultdict):
 
@@ -63,6 +64,21 @@ def parse(infile, ConfigParam=defaultdict):
             print infile + ' is not available.'
             sys.exit(1)
 
+        if re.search('\.gz$',t1_input_file):
+            extracted_file = t1_input_file.replace('.gz','')
+            if os.path.exists(work_dir + '/' + extracted_file):
+                t1_input_file = ''
+                t1_input_file = extracted_file
+            elif os.path.exists(extracted_file):
+                shutil.move(extracted_file,work_dir)
+                t1_input_file = ''
+                t1_input_file = extracted_file
+            else:
+                extracted_file = Zipper.unzipper(t1_input_file, ConfigParam)
+                t1_input_file = ''
+                t1_input_file = extracted_file
+
+        #Add the Format Checker Module
     return t1_input_file
 
 
@@ -83,14 +99,15 @@ def parse_cafa(infile, ConfigParam=defaultdict()):
     infile_handle = open(work_dir + '/' + t1_input_file, 'r')
 
     outfile = t1_input_file + '.iea1'
-    outfile_handle = open(outfile, 'w')
+    outfile_handle = open(work_dir + '/' + outfile, 'w')
 
     if t1_input_file.endswith('.fasta'):
         for lines in infile_handle:
             if lines[0] == '>':
+                cafa_id = lines.strip().split(' ')[0]
                 header = lines.strip().split(' ')[1]
                 target_prot = header.replace('(', '').replace(')', '')
-                print >> outfile_handle, target_prot
+                print >> outfile_handle, cafa_id + '\t' + target_prot
 
     else:
         for lines in infile_handle:
@@ -99,7 +116,7 @@ def parse_cafa(infile, ConfigParam=defaultdict()):
     outfile_handle.close()
     infile_handle.close()
 
-    return outfile
+    return t1_input_file
 
 if __name__ == '__main__':
     parse(infile)

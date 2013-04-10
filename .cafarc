@@ -1,5 +1,5 @@
 [WORKDIR]
-DEFAULT_PATH : .
+DEFAULT_PATH : ./cafa
 
 [FTP]
 HOSTNAME : ftp.ebi.ac.uk
@@ -7,9 +7,9 @@ CURRENT_FILE_PATH : /pub/databases/GO/goa/UNIPROT
 OLD_FILE_PATH : /pub/databases/GO/goa/old/UNIPROT
 
 [DEFAULTS]
-EXP_EVIDENCE_CODES : set(['IEP', 'IPI', 'IMP', 'EXP', 'IGI', 'IDA'])
+EXP_EVIDENCE_CODES : set(['EXP','IDA','IPI','IMP','IGI','IEP'])
 IEA_EVIDENCE_CODES : set(['IEA'])
-ONTOLOGIES : set(['P', 'C', 'F'])
+ONTOLOGIES : set(['F','P','C'])
 TAXONOMY_FILENAME : names.dmp
 
 [SEQUENCE]
@@ -18,6 +18,3 @@ BASE_URL : www.uniprot.org/uniprot/
 [REGEX]
 FTP_DATE : [a-zA-Z]+\_\d+
 FTP_FILE_START : gene_association
-
-[SHELL]
-SCRIPT : ./remove_duplicates.sh

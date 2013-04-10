@@ -39,13 +39,13 @@ def t2_filter(t2_file, ontos=set([]),eco_list=set([]),taxids=set([]), source=set
         ann_ok = False
         pap_ok = False
         source_ok = False
-        inrec = inline.strip().split('\t')
-    
+
+        inrec = inline.strip().split('\t')    
         eco_term = inrec[6]
         onto = inrec[8]
         taxid = inrec[12].split(':')[1]
         line_source = inrec[-1].upper()
-
+        
         if tax_id_name_mapping.has_key(taxid):
             organism = tax_id_name_mapping[taxid]
         
@@ -55,7 +55,6 @@ def t2_filter(t2_file, ontos=set([]),eco_list=set([]),taxids=set([]), source=set
             paper_id = inrec[5].split(':')[1]
         else:
             paper_id = ''
-
         
         if (len(ann_freq) == 0) or (len(ann_freq[inrec[1]][inrec[4]]) >= int(paper_threshold)):
             ann_ok = True
@@ -75,31 +74,6 @@ def t2_filter(t2_file, ontos=set([]),eco_list=set([]),taxids=set([]), source=set
     outfile.close()
     tax_id_name_mapping.clear()
 
-def createT1Excl(t1_exp_file,t1_iea_file):
-    exp_pid_dict = defaultdict(lambda:defaultdict())
-    
-    for inline in t1_exp_file:
-        inrec = inline.strip().split('\t')
-        
-        exp_pid_dict[inrec[1]][inrec[8]] = None
-
-    outfile1  = open(t1_iea_file.name + ".iea2","w")
-    
-    print 'Creating exclusive iea set from : ' + basename(t1_iea_file.name)
-
-    for inline in t1_iea_file:
-        inrec = inline.strip().split('\t')
-        
-        if exp_pid_dict.has_key(inrec[1]):
-            if not exp_pid_dict[inrec[1]].has_key(inrec[8]):
-                outfile1.write(str(inrec[1]) + '\t' + str(inrec[8]) + '\t' + 'part_excl' + '\n')
-        else:
-            outfile1.write(str(inrec[1]) + '\t' + str(inrec[8]) + '\t' + 'all_excl' + '\n')
-            
-    outfile1.close()
-    exp_pid_dict.clear()
-    
-
 def t1_filter_pass1(t1_file, t2_exp, eco_iea=set([]),eco_exp=set([])):
     
     t1_file_handle = open(t1_file, 'r')
@@ -107,7 +81,7 @@ def t1_filter_pass1(t1_file, t2_exp, eco_iea=set([]),eco_exp=set([])):
 
     exp_pid_dict = defaultdict()
     for inline in t2_exp_handle:
-        inrec = inline.strip().split('\t')
+        inrec = inline.strip().split()
         exp_pid_dict[inrec[0]] = None
         
     t2_exp_handle.close()
@@ -125,6 +99,7 @@ def t1_filter_pass1(t1_file, t2_exp, eco_iea=set([]),eco_exp=set([])):
         inrec = inline.strip().split('\t')
         eco_term = inrec[6]
         if exp_pid_dict.has_key(inrec[1]):
+            outfile1.write(inline)
             if eco_term in eco_iea:
                 eco_iea_ok = True
             elif eco_term in eco_exp:
@@ -142,5 +117,3 @@ def t1_filter_pass1(t1_file, t2_exp, eco_iea=set([]),eco_exp=set([])):
     
 if __name__ == '__main__':
     t2_filter(file(sys.argv[1])) 
-#    t1_filter_pass1(file(sys.argv[1]),ontos=set(['P']))
-    #t1_filter_pass2(file(sys.argv[1]), file(sys.argv[2]))

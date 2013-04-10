@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
 import sys
@@ -48,8 +48,6 @@ def download(time_point,ftp,remote_dir,work_dir):
 
         if download_status == 0 and file_found == 1:
             modified_filesize = float(filesize / 1024000000)
-        #if modified_filesize > 1.0:
-         #   print 'This is a ' + str(modified_filesize) + ' GB file. Downloading it might take a while. Please be patient!!!'
             local_filename = os.path.join(work_dir + '/' + filename)
             progress = progressbar.AnimatedProgressBar(start=0, end=filesize, width=50)
             print 'Downloading ' + filename
@@ -92,9 +90,6 @@ def download(time_point,ftp,remote_dir,work_dir):
 
         if download_status == 0 and file_found == 1:
             modified_filesize = float(filesize / 1024000000)
-            #if modified_filesize > 1.0:
-             #   print 'This is a ' + str(modified_filesize) + ' GB file. Downloading it might take a while. Please be patient!!!'
-            
             local_filename = os.path.join(work_dir + '/' + filename)
             progress = progressbar.AnimatedProgressBar(start=0, end=filesize, width=50)
                 
@@ -125,11 +120,6 @@ def download(time_point,ftp,remote_dir,work_dir):
 
 if __name__ == '__main__':
     time_point = sys.argv[1]
-    #ConfigParam = {'ftp_host' : 'ftp.ebi.ac.uk',
-     #              'ftp_curr_path' : 'pub/databases/GO/goa/UNIPROT',
-      #             'ftp_old_path' : 'pub/databases/GO/goa/old/UNIPROT'
-       #            }
-
     download(time_point, ConfigParam)
 
 

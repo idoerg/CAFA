@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
 import sys
@@ -41,13 +41,6 @@ def create():
     outfile_handle.write('[REGEX]\n')
     outfile_handle.write('FTP_DATE : [a-zA-Z]+\_\d+\n')
     outfile_handle.write('FTP_FILE_START : gene_association\n')
-
-    outfile_handle.write('\n')
-
-    outfile_handle.write('[SHELL]\n')
-    outfile_handle.write('SCRIPT : ./remove_duplicates.sh')
-
-
 
 if __name__ == '__main__':
     create()

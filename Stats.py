@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
 import sys
@@ -22,8 +22,9 @@ def plot_stats(benchmark_file, host_url=''):
 
     infile_handle = open(benchmark_file, 'r')
     for lines in infile_handle:
-        fields = lines.strip().split('\t')
-        unique_proteins[fields[0]] = 1
+        fields = lines.strip().split()
+        if fields[-1] == 'N':
+            unique_proteins[fields[0]] = 1
         dist_ontology[fields[1]][fields[0]] = 1
 
     infile_handle.close()
@@ -61,9 +62,7 @@ def plot_stats(benchmark_file, host_url=''):
                 urllib.urlretrieve(download_cmd, 'protein_sequence.fasta')
                 subprocess.call(['cat -s protein_sequence.fasta ' + '>> ' + outfile], shell=True) 
             os.remove('protein_sequence.fasta')
-        #else:
-         #   print 'Thank you for using the benchmark creator software.'
-          #  sys.exit(1)
+        
     elif NumOfProts > 0:
         print 'Creating fasta file of benchmark protein sequences.'
         for prots in unique_proteins:

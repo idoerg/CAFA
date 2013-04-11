@@ -15,7 +15,6 @@ import subprocess
 import ConfigParser
 import Config
 import Stats
-import FormatChecker
 
 # The first step with using the argparse module is to create a parser object that can then parse all the user inputs and convert them into python objects based on the user input types provided
 

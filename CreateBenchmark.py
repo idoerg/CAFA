@@ -99,12 +99,16 @@ def parse_cafa(t2_file, t1_file):
 
     t1_file_handle.close()
 
+    outfile = open(t2_file + '_bench.txt' , 'w')
+
+    print 'Creating benchmark set.....'
+
     t2_file_handle = open(t2_file, 'r')
     
     for lines in t2_file_handle:
         fields = lines.strip().split()
         if t1_dict.has_key(fields[0]):
-            print fields[0] + '\t' + fields[1] + '\t' + fields[2]
+            print >> outfile, fields[0] + '\t' + fields[1] + '\t' + fields[2]
 
     t2_file_handle.close()
 

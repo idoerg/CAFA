@@ -1,9 +1,10 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 import sys
 import os
 import re
 from collections import defaultdict
+
 
 def parse(t1_iea, t1_exp, t2_exp, iea_default=set([]), EEC_default=set([])):
     t2_dict_mfo = defaultdict(lambda:set())
@@ -41,24 +42,30 @@ def parse(t1_iea, t1_exp, t2_exp, iea_default=set([]), EEC_default=set([])):
                 if not t1_exp_dict[fields[1]].has_key(fields[8]):
                     if fields[8] == 'F':
                         for term in t2_dict_mfo[fields[1]]:
-                            print >> outfile, str(fields[1]) + '\t' + 'F' + '\t' + str(term) + '\t' + 'N'
+                            
+                            print >> outfile, str(fields[1]) + '\t' + str(term) + '\t' + 'F' + '\t' + 'N'
                     elif fields[8] == 'P':
                         for term in t2_dict_bpo[fields[1]]:
-                            print >> outfile, str(fields[1]) + '\t' + 'P' + '\t' + str(term) + '\t' + 'N'
+                            
+                            print >> outfile, str(fields[1]) + '\t' + str(term) + '\t' + 'P' + '\t' + 'N'
                     elif fields[8] == 'C':
                         for term in t2_dict_cco[fields[1]]:
-                            print >> outfile, str(fields[1]) + '\t' + 'C' + '\t' + str(term) + '\t' + 'N'
+                            
+                            print >> outfile, str(fields[1]) + '\t' + str(term) + '\t' + 'C' + '\t' + 'N'
 
             else:
                 if t2_dict_mfo.has_key(fields[1]):
                     for term in t2_dict_mfo[fields[1]]:
-                        print >> outfile, str(fields[1]) + '\t' + 'F' + '\t' + str(term) + '\t' + 'N'
+                        
+                        print >> outfile, str(fields[1]) + '\t' + str(term) + '\t' + 'F' + '\t' + 'N'
                 if t2_dict_bpo.has_key(fields[1]):
                     for term in t2_dict_bpo[fields[1]]:
-                        print >> outfile, str(fields[1]) + '\t' + 'P' + '\t' + str(term) + '\t' + 'N'
+                        
+                        print >> outfile, str(fields[1]) + '\t' + str(term) + '\t' + 'P' + '\t' + 'N'
                 if t2_dict_cco.has_key(fields[1]):
                     for term in t2_dict_cco[fields[1]]:
-                        print >> outfile, str(fields[1]) + '\t' + 'C' + '\t' + str(term) + '\t' + 'N'
+                        
+                        print >> outfile, str(fields[1]) + '\t' + str(term) + '\t' + 'C' + '\t' + 'N'
 
 
     t2_dict_mfo.clear()
@@ -75,12 +82,12 @@ def parse(t1_iea, t1_exp, t2_exp, iea_default=set([]), EEC_default=set([])):
             if t1_exp_dict[fields[0]].has_key(fields[1]):
                 if not fields[2] in t1_exp_dict[fields[0]][fields[1]]:
                     prots[fields[0]] = 1
-                    print >> outfile, fields[0] + '\t' + fields[1] + '\t' + fields[2] + '\t' + 'N'
+                    print >> outfile, fields[0] + '\t' + fields[2] + '\t' + fields[1] + '\t' + 'N'
                 else:
                     if prots.has_key(fields[0]):
-                        print >> outfile, fields[0] + '\t' + fields[1] + '\t' + fields[2] + '\t' + 'O'
+                        print >> outfile, fields[0] + '\t' + fields[2] + '\t' + fields[1] + '\t' + 'O'
             else:
-                print >> outfile, fields[0] + '\t' + fields[1] + '\t' + fields[2] + '\t' + 'N'
+                print >> outfile, fields[0] + '\t' + fields[2] + '\t' + fields[1] + '\t' + 'N'
 
     t2_handle.close()
     outfile.close()
@@ -89,16 +96,36 @@ def parse(t1_iea, t1_exp, t2_exp, iea_default=set([]), EEC_default=set([])):
 
 def parse_cafa(t2_file, t1_file):
 
+    map_table = open('./assessment/idmapping_selected.tab','r')
+    map_dict = defaultdict()
+
     t1_dict = defaultdict()
+    t1_dict_mapped = defaultdict()
 
     t1_file_handle = open(t1_file, 'r')
 
     for lines in t1_file_handle:
         fields = lines.strip().split('\t')
-        t1_dict[fields[0]] = 0
+        t1_dict[fields[1]] = 1
 
     t1_file_handle.close()
 
+    for mapper in map_table:
+        fields = mapper.strip().split('\t')
+        if t1_dict.has_key(fields[1]):
+            map_dict[fields[1]] = fields[0]
+
+    t1_file_handle = open(t1_file, 'r')
+
+    for lines in t1_file_handle:
+        fields = lines.strip().split('\t')
+        if map_dict.has_key(fields[1]):
+            uni_id = map_dict[fields[1]]
+            t1_dict_mapped[uni_id] = 1
+        else:
+            t1_dict_mapped[fields[0]] = 1
+
+    
     outfile = open(t2_file + '_bench.txt' , 'w')
 
     print 'Creating benchmark set.....'
@@ -107,9 +134,12 @@ def parse_cafa(t2_file, t1_file):
     
     for lines in t2_file_handle:
         fields = lines.strip().split()
-        if t1_dict.has_key(fields[0]):
-            print >> outfile, fields[0] + '\t' + fields[1] + '\t' + fields[2]
+        if t1_dict_mapped.has_key(fields[0]):
+            print >> outfile, fields[0] + '\t' + fields[2] + '\t' + fields[1]
 
+    map_dict.clear()
+    t1_dict.clear()
+    t1_dict_mapped.clear()
     t2_file_handle.close()
 
 if __name__ == '__main__':

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 import os
 import sys
@@ -48,6 +48,7 @@ def download(time_point,ftp,remote_dir,work_dir):
 
         if download_status == 0 and file_found == 1:
             modified_filesize = float(filesize / 1024000000)
+        
             local_filename = os.path.join(work_dir + '/' + filename)
             progress = progressbar.AnimatedProgressBar(start=0, end=filesize, width=50)
             print 'Downloading ' + filename

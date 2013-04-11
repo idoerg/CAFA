@@ -105,8 +105,8 @@ def parse(parser, ConfigParam=defaultdict()):
 
     sys.stdout.write(user_conf + '\n')
 
-    if args.thresh:
-        user_thresh = args.thresh
+    if args.threshold:
+        user_thresh = args.threshold
     else:
         user_thresh = 4
 

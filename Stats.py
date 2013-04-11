@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 import os
 import sys
@@ -25,7 +25,7 @@ def plot_stats(benchmark_file, host_url=''):
         fields = lines.strip().split()
         if fields[-1] == 'N':
             unique_proteins[fields[0]] = 1
-        dist_ontology[fields[1]][fields[0]] = 1
+        dist_ontology[fields[2]][fields[0]] = 1
 
     infile_handle.close()
     
@@ -54,7 +54,6 @@ def plot_stats(benchmark_file, host_url=''):
 
     if NumOfProts > 500 :
         response = raw_input('Downloading ' + str(NumOfProts) + ' sequences might take a while. Type y to continue or n to exit : ')
-        
         if response == 'y':
             print 'Creating fasta file of benchmark protein sequences.'
             for prots in unique_proteins:

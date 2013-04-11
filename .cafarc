@@ -1,5 +1,5 @@
 [WORKDIR]
-DEFAULT_PATH : .
+DEFAULT_PATH : ./cafa
 
 [FTP]
 HOSTNAME : ftp.ebi.ac.uk

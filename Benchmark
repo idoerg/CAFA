@@ -15,6 +15,7 @@ import subprocess
 import ConfigParser
 import Config
 import Stats
+import FormatChecker
 
 # The first step with using the argparse module is to create a parser object that can then parse all the user inputs and convert them into python objects based on the user input types provided
 
@@ -23,17 +24,17 @@ print "Welcome to the Benchmark Creation tool !!!!!"
 print "*************************************************"
 
 parser = argparse.ArgumentParser(prog='bm.py',description='Creates a set of benchmark proteins')
-parser.add_argument('-G','--organism',nargs='*', default=['all'],help='Specifies a set of organisms (multiple organisms to be separated by space) whose proteins will be considered for benchmarking. Default is all organisms')
-parser.add_argument('-N','--ontology',nargs='*', default=['all'],help='Specifies the set of ontologies(multiple ontologies to be separated by space) to be used. By default, all 3 ontologies will be used. Default is all 3 ontologies')
-parser.add_argument('-V','--evidence',nargs='*', default=['all'],help='Specifies the evidence codes to be considered (multiple codes separated by space). By default, all experimentally validated evidence codes (as per GO standards) will be considered. Default is all experimental evidence codes')
-parser.add_argument('-C','--cafa', default='F' ,help='Specifies whether a user is a CAFA participant or not (True/False). Default is False')
-parser.add_argument('-I1', '--input1', nargs='*', help='Specifies the path to a Target file (either CAFA Targets File or any other. If not specified, defaults to None')
-parser.add_argument('-I2', '--input2', nargs='*', help='Specifies either the path to a file with experimental evidence codes or mentions a version in MM_YYYY format (for eg: Dec_2006)to be downloaded.If not specified, defaults to None')
-parser.add_argument('-O', '--output', nargs='*',default=[], help='Provides an option to the user to specify a basename for the output file.')
-parser.add_argument('-S', '--source',action='store' ,nargs='*',default=['all'],help='Provides filter options on the datbaases that assigned a particular annotation. If not specified, the program returns results from all sources.')
+parser.add_argument('-G','--organism',nargs='*', default=['all'],help='Provides user a choice to specify a set of organisms (example:Saccharomyces cerevisiae or 7227) separated by space.Default is all.')
+parser.add_argument('-N','--ontology',nargs='*', default=['all'],help='Provides user a choice to specify a set of ontologies (F, P, C) separated by space. Default is all.')
+parser.add_argument('-V','--evidence',nargs='*', default=['all'],help='Provides user a choice to specify a set of GO experimental evidence codes (example: IPI, IDA, EXP) separated by space.Default is all.')
+parser.add_argument('-C','--cafa', default='F' ,help='Takes in either T or F. If specified as T, user needs to provide a CAFA targets file as input1. If F, program will take in a uniprot-goa file as input1. Default is F')
+parser.add_argument('-I1', '--input1', nargs='*', help='This opton is mandatory. Specifies path to the first input file.')
+parser.add_argument('-I2', '--input2', nargs='*', help='This option is mandatory. Specifies path to the second input file.')
+parser.add_argument('-O', '--output', nargs='*',default=[], help='Optional argument.Provides user an option to specify an output filename.')
+parser.add_argument('-S', '--source',action='store' ,nargs='*',default=['all'],help='Provides user a choice to specify sources (example: UniProt, InterPro) separated by spaces. Default is all.')
 parser.add_argument('-P', '--pubmed',default='F',help='Allows user to turn on the pubmed filter. If turned on, GO terms w/o any Pubmed references will not be considered part of the benchmark set.By default, it is turned off.')
 parser.add_argument('-F', '--confidence',default='F',help='Allows user to turn on the annotation confidence filter. If turned on, GO terms assignments to proteins that are documented in few papers (4 or less by default) will not be considered part of the benchmark set.By default, it is turned off.')
-parser.add_argument('-T', '--thresh',type=int, default=4,help='Allows users to specify a threshold for the minimum number of papers to be used for having a confident annotation. If not specified, defaults to a value of 4.')
+parser.add_argument('-T', '--threshold',type=int, default=4,help='Allows users to specify a threshold for the minimum number of papers to be used for having a confident annotation. If not specified, defaults to a value of 4.')
 parser.add_argument('-B', '--blacklist', nargs='*',default=[], help='This parameter can take in a list of pubmed ids and all GO terms and proteins annotated in them will be eliminated from the benchmark set.Default is an empty list.')
 
 # Search for config file in the current directory
@@ -96,6 +97,10 @@ else:
 
 t2_input_file = work_dir + '/' + CreateDataset.parse(t2, ConfigParam)
 
+# Add format checker module here
+
+FormatChecker.check(t1_input_file, t2_input_file,parsed_dict['user_mode'])
+
 if not os.path.exists(t2_input_file + '_with_annotations_per_paper.txt'):
     paper_annotation_freq  = t2_input_file + '_with_annotations_per_paper.txt'
     paper_conf_filter = True
@@ -142,12 +147,12 @@ else:
     if not outfile_basename == '':
         ob = work_dir + '/' + outfile_basename 
     else:
-        ob = t2_input_file
+        ob = t2_input_file + '.benchmark'
 
     index = 1
-    while os.path.exists(ob + '.' + str(index) + '.benchmark'):
+    while os.path.exists(ob + '.' + str(index)):
         index = index + 1
-    output_filename = ob + '.' + str(index) + '.benchmark'
+    output_filename = ob + '.' + str(index)
     
 if os.stat(filename).st_size == 0:
     print "Your benchmark set is empty."
@@ -159,7 +164,7 @@ print 'Cleaning working directory....'
 
 os.remove(filename)
 os.remove(t1_input_file + '.iea1')
-if (t1_input_file + '.exp1'):
+if os.path.exists(t1_input_file + '.exp1'):
     os.remove(t1_input_file + '.exp1')
 
 os.remove(t2_input_file + '.exponly')
@@ -169,4 +174,4 @@ for root, dirs, files in os.walk(work_dir):
         if os.path.getsize(root + '/' + fname) == 0:
             os.remove(root + '/' + fname)
 
-print 'Thank you for using the Benchmark Creator Software.'
+print 'Thank you for using the Benchmark Creator Software'

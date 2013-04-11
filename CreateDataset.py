@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 
 import os
 import sys
@@ -78,7 +78,6 @@ def parse(infile, ConfigParam=defaultdict):
                 t1_input_file = ''
                 t1_input_file = extracted_file
 
-        #Add the Format Checker Module
     return t1_input_file
 
 
@@ -104,7 +103,7 @@ def parse_cafa(infile, ConfigParam=defaultdict()):
     if t1_input_file.endswith('.fasta'):
         for lines in infile_handle:
             if lines[0] == '>':
-                cafa_id = lines.strip().split(' ')[0]
+                cafa_id = lines.strip().split(' ')[0].replace('>', '')
                 header = lines.strip().split(' ')[1]
                 target_prot = header.replace('(', '').replace(')', '')
                 print >> outfile_handle, cafa_id + '\t' + target_prot

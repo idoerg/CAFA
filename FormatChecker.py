@@ -30,7 +30,8 @@ def check(infile1, infile2, mode):
         else:
             infile2_handle = open(infile2, 'r')
             firstline = infile2_handle.readline()
-            if not re.search('^\!gaf', firstline):
+            fields = firstline.strip().split('\t')
+            if not re.search('^\!gaf', firstline) or not len(fields) == 15:
                 print "Error in input2 file format."
                 sys.exit(1)
 
@@ -42,7 +43,12 @@ def check(infile1, infile2, mode):
         else:
             infile1_handle = open(infile1, 'r')
             firstline = infile1_handle.readline()
-            if not re.search('^\!gaf', firstline):
+            fields = firstline.strip().split('\t')
+            if re.search('^\!gaf', firstline):
+                pass
+            elif len(fields) == 15:
+                pass
+            else:
                 print "Error in input1 file format"
                 sys.exit(1)
 
@@ -52,8 +58,13 @@ def check(infile1, infile2, mode):
         else:
             infile2_handle = open(infile2, 'r')
             firstline = infile2_handle.readline()
-            if not re.search('^\!gaf', firstline):
-                print "Error in input2 file format"
+            fields = firstline.strip().split('\t')
+            if re.search('^\!gaf', firstline):
+                pass
+            elif len(fields) == 15:
+                pass
+            else:
+                print "Error in input1 file format"
                 sys.exit(1)
         
         

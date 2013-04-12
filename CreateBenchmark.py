@@ -42,29 +42,29 @@ def parse(t1_iea, t1_exp, t2_exp, iea_default=set([]), EEC_default=set([])):
                 if not t1_exp_dict[fields[1]].has_key(fields[8]):
                     if fields[8] == 'F':
                         for term in t2_dict_mfo[fields[1]]:
-                            
+                            #print >> outfile, str(fields[1]) + '\t' + 'F' + '\t' + str(term) + '\t' + 'N'
                             print >> outfile, str(fields[1]) + '\t' + str(term) + '\t' + 'F' + '\t' + 'N'
                     elif fields[8] == 'P':
                         for term in t2_dict_bpo[fields[1]]:
-                            
+                            #print >> outfile, str(fields[1]) + '\t' + 'P' + '\t' + str(term) + '\t' + 'N'
                             print >> outfile, str(fields[1]) + '\t' + str(term) + '\t' + 'P' + '\t' + 'N'
                     elif fields[8] == 'C':
                         for term in t2_dict_cco[fields[1]]:
-                            
+                            #print >> outfile, str(fields[1]) + '\t' + 'C' + '\t' + str(term) + '\t' + 'N'
                             print >> outfile, str(fields[1]) + '\t' + str(term) + '\t' + 'C' + '\t' + 'N'
 
             else:
                 if t2_dict_mfo.has_key(fields[1]):
                     for term in t2_dict_mfo[fields[1]]:
-                        
+                        #print >> outfile, str(fields[1]) + '\t' + 'F' + '\t' + str(term) + '\t' + 'N'
                         print >> outfile, str(fields[1]) + '\t' + str(term) + '\t' + 'F' + '\t' + 'N'
                 if t2_dict_bpo.has_key(fields[1]):
                     for term in t2_dict_bpo[fields[1]]:
-                        
+                        #print >> outfile, str(fields[1]) + '\t' + 'P' + '\t' + str(term) + '\t' + 'N'
                         print >> outfile, str(fields[1]) + '\t' + str(term) + '\t' + 'P' + '\t' + 'N'
                 if t2_dict_cco.has_key(fields[1]):
                     for term in t2_dict_cco[fields[1]]:
-                        
+                        #print >> outfile, str(fields[1]) + '\t' + 'C' + '\t' + str(term) + '\t' + 'N'
                         print >> outfile, str(fields[1]) + '\t' + str(term) + '\t' + 'C' + '\t' + 'N'
 
 
@@ -96,11 +96,7 @@ def parse(t1_iea, t1_exp, t2_exp, iea_default=set([]), EEC_default=set([])):
 
 def parse_cafa(t2_file, t1_file):
 
-    map_table = open('./assessment/idmapping_selected.tab','r')
-    map_dict = defaultdict()
-
     t1_dict = defaultdict()
-    t1_dict_mapped = defaultdict()
 
     t1_file_handle = open(t1_file, 'r')
 
@@ -109,22 +105,6 @@ def parse_cafa(t2_file, t1_file):
         t1_dict[fields[1]] = 1
 
     t1_file_handle.close()
-
-    for mapper in map_table:
-        fields = mapper.strip().split('\t')
-        if t1_dict.has_key(fields[1]):
-            map_dict[fields[1]] = fields[0]
-
-    t1_file_handle = open(t1_file, 'r')
-
-    for lines in t1_file_handle:
-        fields = lines.strip().split('\t')
-        if map_dict.has_key(fields[1]):
-            uni_id = map_dict[fields[1]]
-            t1_dict_mapped[uni_id] = 1
-        else:
-            t1_dict_mapped[fields[0]] = 1
-
     
     outfile = open(t2_file + '_bench.txt' , 'w')
 
@@ -134,13 +114,82 @@ def parse_cafa(t2_file, t1_file):
     
     for lines in t2_file_handle:
         fields = lines.strip().split()
-        if t1_dict_mapped.has_key(fields[0]):
+        if t1_dict.has_key(fields[0]):
+            print >> outfile, fields[0] + '\t' + fields[2] + '\t' + fields[1]
+        elif t1_dict.has_key(fields[-1]):
             print >> outfile, fields[0] + '\t' + fields[2] + '\t' + fields[1]
 
-    map_dict.clear()
     t1_dict.clear()
-    t1_dict_mapped.clear()
     t2_file_handle.close()
+
+    '''
+    #map_table = open('mapping_table.txt','r')
+    #map_dict = defaultdict()
+
+    #for mapper in map_table:
+     #   [swiss_id, uniprot_id] = mapper.strip().split('\t')
+      #  map_dict[swiss_id] = uniprot_id
+
+
+    t2_dict_mfo = defaultdict(lambda:set())
+    t2_dict_bpo = defaultdict(lambda:set())
+    t2_dict_cco = defaultdict(lambda:set())
+
+    t2_handle = open(t2_file, 'r')
+
+    for lines in t2_handle:
+        fields = lines.strip().split('\t')
+        if fields[1] == 'F':
+            t2_dict_mfo[fields[0]].add(fields[2])
+            t2_dict_mfo[fields[-1]].add(fields[2])
+        elif fields[1] == 'P':
+            t2_dict_bpo[fields[0]].add(fields[2])
+            t2_dict_bpo[fields[-1]].add(fields[2])
+        elif fields[1] == 'C':
+            t2_dict_cco[fields[0]].add(fields[2])
+            t2_dict_cco[fields[-1]].add(fields[2])
+
+
+    t2_handle.close()
+
+    outfile = open(t2_file + '_bench.txt' , 'w')
+
+    print 'Creating benchmark set.....'
+
+    t1_handle = open(t1_file, 'r')
+
+    for lines in t1_handle:
+        fields = lines.strip().split()
+        
+        #if map_dict.has_key(lines):
+         #   uni_id = map_dict[lines]
+        #else:
+         #   uni_id = lines
+        if t2_dict_mfo.has_key(fields[0]):
+            for term in t2_dict_mfo[fields[0]]:
+                print >> outfile, str(fields[0]) + '\t' + 'F' + '\t' + str(term) + '\t' + fields[1]
+
+        elif t2_dict_mfo.has_key(fields[1]):
+            for term in t2_dict_mfo[fields[1]]:
+                print >> outfile, str(fields[0]) + '\t' + 'F' + '\t' + str(term) + '\t' + fields[1]
+
+        if t2_dict_bpo.has_key(fields[0]):
+            for term in t2_dict_bpo[fields[0]]:
+                print >> outfile, str(fields[0]) + '\t' + 'P' + '\t' + str(term) + '\t' + fields[1]
+
+        elif t2_dict_bpo.has_key(fields[1]):
+            for term in t2_dict_bpo[fields[1]]:
+                print >> outfile, str(fields[0]) + '\t' + 'P' + '\t' + str(term) + '\t' + fields[1]
+
+        if t2_dict_cco.has_key(fields[0]):
+            for term in t2_dict_cco[fields[0]]:
+                print >> outfile, str(fields[0]) + '\t' + 'C' + '\t' + str(term) + '\t' + fields[1]
+
+        elif t2_dict_cco.has_key(fields[1]):
+            for term in t2_dict_cco[fields[1]]:
+                print >> outfile, str(fields[0]) + '\t' + 'C' + '\t' + str(term) + '\t' + fields[1]
+
+      '''
 
 if __name__ == '__main__':
     exp_file = sys.argv[1]

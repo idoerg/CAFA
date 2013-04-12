@@ -11,6 +11,7 @@ def unzipper(infile, ConfigParam=defaultdict()):
     if not infile == '' :
         unzip_file = infile.replace('.gz',  '')
         print 'Extracting file ' + infile
+        #os.system('gunzip -c ' + work_dir + '/' + infile + ' > ' + work_dir + '/' + unzip_file)
         os.system('gunzip ' + work_dir + '/' + infile)
 
     return unzip_file

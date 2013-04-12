@@ -16,6 +16,7 @@ def count(infile, EEC=set([]), ann_conf_filter=False, paper_conf_filter=False):
         if line[0] == '!':
             continue
         fields = line.strip().split('\t')
+        #if fields[5] != '' and fields[5].startswith('PMID'):
         if not fields[5] == '' and re.match('^PMID', fields[5]):
             paper_id = fields[5].split(':')[1]
         

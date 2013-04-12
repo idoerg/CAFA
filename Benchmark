@@ -132,10 +132,6 @@ if parsed_dict['user_mode'] == 'T':
     t1_iea = t1_input_file + '.iea1'
     CreateBenchmark.parse_cafa(t2_exp, t1_iea)
     filename = t2_exp + '_bench.txt'
-    index = 1
-    while os.path.exists(t2_input_file + '.' + str(index) + '.benchmark'):
-        index = index + 1
-    output_filename = t2_input_file + '.' + str(index) + '.benchmark'
     
 else:
     FilterDataset.t1_filter_pass1(t1_input_file, t2_exp, ConfigParam['iea_eec'], ConfigParam['exp_eec'])
@@ -144,19 +140,20 @@ else:
     CreateBenchmark.parse(t1_iea_handle, t1_exp_handle, t2_exp, ConfigParam['iea_eec'], ConfigParam['exp_eec'])
     filename = t2_exp + '_bench.txt'
 
-    if not outfile_basename == '':
-        ob = work_dir + '/' + outfile_basename 
-    else:
-        ob = t2_input_file + '.benchmark'
+if not outfile_basename == '':
+    ob = work_dir + '/' + outfile_basename 
+else:
+    ob = t2_input_file + '.benchmark'
 
-    index = 1
-    while os.path.exists(ob + '.' + str(index)):
-        index = index + 1
-    output_filename = ob + '.' + str(index)
+index = 1
+while os.path.exists(ob + '.' + str(index)):
+    index = index + 1
+output_filename = ob + '.' + str(index)
     
 if os.stat(filename).st_size == 0:
     print "Your benchmark set is empty."
 else:
+    #subprocess.call([ConfigParam['shell_script'] + ' ' + filename + ' ' + output_filename], shell=True)
     subprocess.call(['sort ' + filename + '| uniq > ' + output_filename], shell=True)
     Stats.plot_stats(output_filename, uniprot_path)
 

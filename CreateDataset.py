@@ -78,6 +78,7 @@ def parse(infile, ConfigParam=defaultdict):
                 t1_input_file = ''
                 t1_input_file = extracted_file
 
+        #Add the Format Checker Module
     return t1_input_file
 
 

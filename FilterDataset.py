@@ -45,6 +45,11 @@ def t2_filter(t2_file, ontos=set([]),eco_list=set([]),taxids=set([]), source=set
         onto = inrec[8]
         taxid = inrec[12].split(':')[1]
         line_source = inrec[-1].upper()
+    
+        if not inrec[10] == '':
+            swiss_id = inrec[10].split('|')[-1]
+        else:
+            swiss_id = inrec[1]
         
         if tax_id_name_mapping.has_key(taxid):
             organism = tax_id_name_mapping[taxid]
@@ -69,10 +74,46 @@ def t2_filter(t2_file, ontos=set([]),eco_list=set([]),taxids=set([]), source=set
         if (not source) or (line_source in source):
             source_ok = True
         if tax_ok and eco_ok and onto_ok and ann_ok and pap_ok and source_ok:
-            outfile.write(str(inrec[1]) + '\t' + str(inrec[8]) + '\t' + str(inrec[4]) + '\n')
+            outfile.write(str(inrec[1]) + '\t' + str(inrec[8]) + '\t' + str(inrec[4]) + '\t' + str(swiss_id) + '\n')
 
     outfile.close()
     tax_id_name_mapping.clear()
+
+def createT1Excl(t1_exp_file,t1_iea_file):
+    exp_pid_dict = defaultdict(lambda:defaultdict())
+    
+    for inline in t1_exp_file:
+        inrec = inline.strip().split('\t')
+        
+        exp_pid_dict[inrec[1]][inrec[8]] = None
+
+    outfile1  = open(t1_iea_file.name + ".iea2","w")
+    
+    print 'Creating exclusive iea set from : ' + basename(t1_iea_file.name)
+
+    iea_prots = defaultdict(lambda:set())
+
+    for inline in t1_iea_file:
+        inrec = inline.strip().split('\t')
+        iea_prots[inrec[1]].add(inrec[8])
+        if exp_pid_dict.has_key(inrec[1]):
+            if not exp_pid_dict[inrec[1]].has_key(inrec[8]):
+                outfile1.write(str(inrec[1]) + '\t' + str(inrec[8]) + '\t' + str(inrec[4]) + '\t' + 'part_excl' + '\t' + inrec[10] + '\n')
+        else:
+            outfile1.write(str(inrec[1]) + '\t' + str(inrec[8]) + '\t' + str(inrec[4]) + '\t' + 'all_excl' + '\t' + inrec[10] + '\n')
+            
+    exp_pid_dict.clear()
+
+    for inline in t1_exp_file:
+        inrec = inline.strip().split('\t')
+        if not iea_prots.has_key(inrec[1]):
+            outfile1.write(str(inrec[1]) + '\t' + str(inrec[8]) + '\t' + str(inrec[4]) + '\t' + 'all_exp' + '\t' + inrec[10] + '\n')
+        else:
+            if not inrec[8] in iea_prots[inrec[1]]:
+                outfile1.write(str(inrec[1]) + '\t' + str(inrec[8]) + '\t' + str(inrec[4]) + '\t' + 'part_exp' + '\t' + inrec[10] + '\n')
+
+    outfile1.close()
+    iea_prots.clear()
 
 def t1_filter_pass1(t1_file, t2_exp, eco_iea=set([]),eco_exp=set([])):
     
@@ -117,3 +158,5 @@ def t1_filter_pass1(t1_file, t2_exp, eco_iea=set([]),eco_exp=set([])):
     
 if __name__ == '__main__':
     t2_filter(file(sys.argv[1])) 
+#    t1_filter_pass1(file(sys.argv[1]),ontos=set(['P']))
+    #t1_filter_pass2(file(sys.argv[1]), file(sys.argv[2]))

@@ -9,7 +9,6 @@ import stat
 
 def check(infile1, infile2, mode):
     if mode == 'T':
-        print 'hello'
         if os.stat(infile1).st_size == 0:
             print 'You have submitted an empty t1 file.'
             sys.exit(1)
@@ -21,7 +20,6 @@ def check(infile1, infile2, mode):
                 print 'Probably incorrect format for fasta file.'
                 sys.exit(1)
         else:
-            print 'hello'
             sys.exit(1)
 
         if os.stat(infile2).st_size == 0:
@@ -31,8 +29,12 @@ def check(infile1, infile2, mode):
             infile2_handle = open(infile2, 'r')
             firstline = infile2_handle.readline()
             fields = firstline.strip().split('\t')
-            if not re.search('^\!gaf', firstline) or not len(fields) == 15:
-                print "Error in input2 file format."
+            if re.search('^\!gaf', firstline):
+                pass
+            elif len(fields) == 15:
+                pass
+            else:
+                print "Error in input1 file format"
                 sys.exit(1)
 
         

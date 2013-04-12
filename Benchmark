@@ -23,7 +23,7 @@ print "*************************************************"
 print "Welcome to the Benchmark Creation tool !!!!!"
 print "*************************************************"
 
-parser = argparse.ArgumentParser(prog='bm.py',description='Creates a set of benchmark proteins')
+parser = argparse.ArgumentParser(prog='Benchmark',description='Creates a set of benchmark proteins')
 parser.add_argument('-G','--organism',nargs='*', default=['all'],help='Provides user a choice to specify a set of organisms (example:Saccharomyces cerevisiae or 7227) separated by space.Default is all.')
 parser.add_argument('-N','--ontology',nargs='*', default=['all'],help='Provides user a choice to specify a set of ontologies (F, P, C) separated by space. Default is all.')
 parser.add_argument('-V','--evidence',nargs='*', default=['all'],help='Provides user a choice to specify a set of GO experimental evidence codes (example: IPI, IDA, EXP) separated by space.Default is all.')

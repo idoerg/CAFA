@@ -1,0 +1,9 @@
+The CAFA A.D tool is designed to assess user predictions against a benchmark set. The usage of the tool is as follows:
+
+python Assess -P <name of prediction file> -B <name of benchmark file> <some optional parameters>
+
+The optional parameters can be viewed using "python assess_prediction.py --help"
+
+Once the most recent version of the source code has been downloaded, the first script to run is Configure.py. This is like a pre installation script that will download the latest version of the uniprot id mapping file and save it to your current directory. Once this is done, you can run the actual program (using the Assess script above). 
+
+The output will be 2 files: A text file containing the precision-recall values per ontology. The second file is a visualization of the precision-recall curve per ontology.

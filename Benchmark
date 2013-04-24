@@ -23,7 +23,7 @@ print "*************************************************"
 print "Welcome to the Benchmark Creation tool !!!!!"
 print "*************************************************"
 
-parser = argparse.ArgumentParser(prog='Benchmark',description='Creates a set of benchmark proteins')
+parser = argparse.ArgumentParser(prog='bm.py',description='Creates a set of benchmark proteins')
 parser.add_argument('-G','--organism',nargs='*', default=['all'],help='Provides user a choice to specify a set of organisms (example:Saccharomyces cerevisiae or 7227) separated by space.Default is all.')
 parser.add_argument('-N','--ontology',nargs='*', default=['all'],help='Provides user a choice to specify a set of ontologies (F, P, C) separated by space. Default is all.')
 parser.add_argument('-V','--evidence',nargs='*', default=['all'],help='Provides user a choice to specify a set of GO experimental evidence codes (example: IPI, IDA, EXP) separated by space.Default is all.')
@@ -51,8 +51,8 @@ for root,dirs,files in os.walk('.'):
         Config.create()
     break
     
-Config = ConfigParser.ConfigParser()
-Config.read('.cafarc')
+Config_handle = ConfigParser.ConfigParser()
+Config_handle.read('.cafarc')
 ConfigParam = defaultdict()
 
 ConfigParam = {'workdir' : Config.get('WORKDIR', 'DEFAULT_PATH'),
@@ -79,7 +79,7 @@ parsed_dict = ArgParser.parse(parser, ConfigParam)
 
 t1 = parsed_dict['t1']
 t2 = parsed_dict['t2']
-outfile_basename = parsed_dict['outfile']
+outfile_basename = basename(parsed_dict['outfile'])
 
 # At this point once all input parameters are validated, validation of file format should be done to make sure users input file in appropriate format
 
@@ -153,7 +153,6 @@ output_filename = ob + '.' + str(index)
 if os.stat(filename).st_size == 0:
     print "Your benchmark set is empty."
 else:
-    #subprocess.call([ConfigParam['shell_script'] + ' ' + filename + ' ' + output_filename], shell=True)
     subprocess.call(['sort ' + filename + '| uniq > ' + output_filename], shell=True)
     Stats.plot_stats(output_filename, uniprot_path)
 

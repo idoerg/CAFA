@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 # The assessment program takes in 2 files: One file containing predictions for a set of target proteins and the other file containing the true experimental validations for the same targets
 
@@ -13,25 +13,86 @@ import Propagate
 import FilterPredictionSet
 import CreateDataset
 import Compare
-
+import Config
+import ConfigParser
+from os.path import basename
+import shutil
 
 print "Welcome to the CAFA Assessment Tool!!!!"
-print "*************************************************\n"
+print "***************************************\n"
 
-parser = argparse.ArgumentParser(prog='Assess',description='Assess predictions from different prediction methods')
+parser = argparse.ArgumentParser(prog='Assess',description='Asseess the predictions produced through different prediction methods')
 
-parser.add_argument('-P', '--prediction',action='store',nargs='*',help='Specifies the path to a file containing predictions from a specific method. The file needs to follow the required format to be accepted by the software.')
-parser.add_argument('-B', '--benchmark',action='store' ,nargs='*',help='Specifies the path to a file containing true experimental validations for the target proteins. This can be a simple tab delimited file with 2 columns, the first column is the protein identifier and second column contains the GO term.')
-parser.add_argument('-N', '--ontology',action='store',nargs='*',default=['all'],help='Provide a choice as to what type of ontology would the user like to assess. In the default event, assessment of all ontologies will be provided')
-parser.add_argument('-R', '--prop',action='store',default='F',help='Mention whether the input prediction file has predictions propagated to the root or not. By default, it is assumed that the predictions are unpropagated.Set to False')
+parser.add_argument('-P', '--prediction',action='store',nargs='*',help='Specifies the path to a predictions file.')
+parser.add_argument('-B', '--benchmark',action='store' ,nargs='*',help='Specifies the path to a benchmark file.')
+parser.add_argument('-O', '--output', nargs='*',default=[], help='Optional argument.Provides user with option to specify output filename.')
+parser.add_argument('-N', '--ontology',action='store',nargs='*',default=['all'],help='Provides user a choice to specify a list of ontologies(example: F, P, C) separated by space.Default is all.')
+parser.add_argument('-R', '--prop',action='store',default='F',help='Can take in either T of F values. If T, the program will assume that the predictions and benchmark are already propagated. Default is F.')
+
+# Search for config file in the current directory                                                                                             
+fname_ind = 0
+
+for root,dirs,files in os.walk('.'):
+    for fname in files:
+        if fname == '.cafarc':
+            fname_ind = 1
+    if fname_ind == 0:
+        print 'Config file not found'
+        print 'Creating new configuration file...'
+        print '***************************************************************'
+        Config.create()
+    break
+
+Config_handle = ConfigParser.ConfigParser()
+Config_handle.read('.cafarc')
+ConfigParam = defaultdict()
+
+ConfigParam = {'workdir' : Config_handle.get('WORKDIR', 'DEFAULT_PATH')
+               }
+
+work_dir = ConfigParam['workdir']
+work_dir = work_dir.rstrip('/')
+
+if not os.path.exists(work_dir):
+    os.makedirs(work_dir)
 
 parsed_input = ArgParser.parse(parser)
 print "Successfully validated inputs.......\n"
 
+# Check if inputs exist
+
+pred_file_basename = basename(parsed_input['pred_file'])
+if os.path.exists(work_dir + '/' + pred_file_basename):
+    pred_file = work_dir + '/' + pred_file_basename
+elif os.path.exists(parsed_input['pred_file']):
+    shutil.move(parsed_input['pred_file'],work_dir)
+    pred_file = work_dir + '/' + pred_file_basename
+else:
+    print parsed_input['pred_file'] + ' is not available.'
+    sys.exit(1)
+
+bench_file_basename = basename(parsed_input['bench_file'])
+if os.path.exists(work_dir + '/' + bench_file_basename):
+    bench_file = work_dir + '/' + bench_file_basename
+elif os.path.exists(parsed_input['bench_file']):
+    shutil.move(parsed_input['bench_file'],work_dir)
+    bench_file = work_dir + '/' + bench_file_basename
+else:
+    print parsed_input['bench_file'] + ' is not available.'
+    sys.exit(1)
+
+# Output format
+outfile_basename = basename(parsed_input['outfile'])
+
+if not outfile_basename == '':
+    ob = work_dir + '/' + outfile_basename
+else:
+    ob = pred_file + '.prec_rec'
+
 # Check file formats
 
-pred_file_handle = open(parsed_input['pred_file'], 'r')
-print "Checking prediction file format"
+pred_file_handle = open(pred_file, 'r')
+print "Checking prediction file format.........\n"
 
 for lines in pred_file_handle:
     fields = lines.strip().split()
@@ -62,17 +123,16 @@ for lines in pred_file_handle:
     if lines == ' ':
         continue
     if not len(fields) == 3:
-        print lines
         print 'Incorrect file format.Please check and submit again.\n'
         sys.exit(1)
     if not re.match('GO:\d+',fields[1]) and re.match('\d\.\d+',fields[2]):
         print 'The second column should be the GO term and last column should be threshold.\n'
         sys.exit(1)
 
-print 'Successfully validated prediction file format'
+print 'Successfully validated prediction file format\n'
 
-exp_file_handle = open(parsed_input['bench_file'], 'r')
-print "Checking benchmark file format."
+exp_file_handle = open(bench_file, 'r')
+print "Checking benchmark file format.......\n"
 
 for line in exp_file_handle:
     fields = line.strip().split()
@@ -89,13 +149,13 @@ print 'Successfully validated benchmark file format.\n'
 # Check for Propagation status
 
 if parsed_input['prop_status'] == 'T':
-    propagated_pred_file = parsed_input['pred_file']
-    propagated_bench_file = parsed_input['bench_file']
+    propagated_pred_file = pred_file
+    propagated_bench_file = bench_file
     print "Prediction and bench data are already propagated."
     final_pred_set, final_bench_set = FilterPredictionSet.pred_filter(propagated_pred_file, propagated_bench_file)
 else:
-    propagated_pred_file = Propagate.propagate_prediction(parsed_input['pred_file'])
-    propagated_bench_file = Propagate.propagate_benchmark(parsed_input['bench_file'])
+    propagated_pred_file = Propagate.propagate_prediction(pred_file)
+    propagated_bench_file = Propagate.propagate_benchmark(bench_file)
     final_pred_set, final_bench_set = FilterPredictionSet.pred_filter(propagated_pred_file, propagated_bench_file)
 
 # After the predictions and benchmark set are propagated and we have extracted the pred and bench set to actually assess, the next step is to check the user's choice of ontology for doing the assessment 
@@ -106,11 +166,11 @@ true_ann_mfo, true_ann_bpo, true_ann_cco, unique_prots_mfo, unique_prots_bpo, un
 
 if pred_ann_mfo and true_ann_mfo:
     print "Assessing predictions in the molecular function category......"
-    Compare.calc(pred_ann_mfo, true_ann_mfo, unique_prots_mfo, parsed_input['pred_file'], 'F')
+    Compare.calc(pred_ann_mfo, true_ann_mfo, unique_prots_mfo, ob, 'F')
 if pred_ann_bpo and true_ann_bpo:
     print "Assessing predictions in the biological process category......"
-    Compare.calc(pred_ann_bpo, true_ann_bpo, unique_prots_bpo, parsed_input['pred_file'], 'P')
+    Compare.calc(pred_ann_bpo, true_ann_bpo, unique_prots_bpo, ob, 'P')
 if pred_ann_cco and true_ann_cco:
     print "Assessing predictions in the cellular components category......"
-    Compare.calc(pred_ann_cco, true_ann_cco, unique_prots_cco, parsed_input['pred_file'], 'C')
+    Compare.calc(pred_ann_cco, true_ann_cco, unique_prots_cco, ob, 'C')
 

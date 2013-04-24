@@ -19,7 +19,7 @@ def extract_proteins(threshold_list,pred_dict):
 
     return prots_per_thresh
 
-def calc(pred_annotation, true_annotation, unique_prots, pred_file, ont):
+def calc(pred_annotation, true_annotation, unique_prots, outfile, ont):
     
     threshold_range = defaultdict()
     prec_per_thresh = []
@@ -28,7 +28,7 @@ def calc(pred_annotation, true_annotation, unique_prots, pred_file, ont):
     r_count = []
     f_score = []
     i = 0.01
-    outfile = open(pred_file + '_prec_rec_values_for_' + ont , 'w')
+    outfile_handle = open(outfile + '_' + ont , 'w')
 
     while i <= 1.01:
         threshold_range[i] = 1
@@ -80,7 +80,7 @@ def calc(pred_annotation, true_annotation, unique_prots, pred_file, ont):
 
         prec_per_thresh.append(avg_prec)
         rec_per_thresh.append(avg_rec)
-        print >> outfile, str(thresh) + '\t' + str(avg_prec) + '\t' + str(avg_rec)
+        print >> outfile_handle, str(thresh) + '\t' + str(avg_prec) + '\t' + str(avg_rec)
         p_count.append(prec_count)
         r_count.append(rec_count)
         try:
@@ -90,7 +90,7 @@ def calc(pred_annotation, true_annotation, unique_prots, pred_file, ont):
 
     pred_cov = Stats.calc_cov(p_count, r_count)
     F_measure = max(f_score)
-    Stats.plot_roc_curve(prec_per_thresh, rec_per_thresh, pred_file, pred_cov, F_measure, ont)
+    Stats.plot_roc_curve(prec_per_thresh, rec_per_thresh, outfile, pred_cov, F_measure, ont)
 
 
 if __name__ == '__main__':

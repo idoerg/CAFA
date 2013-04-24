@@ -34,8 +34,6 @@ def mapper_pred(infile):
         elif db1.has_key(cols[1]):
             mapper_swiss[cols[1]] = cols[0]
 
-    print "Mapping prediction data to uniprot ids....."
-
     prediction_file = open(infile, 'r')
     for data in prediction_file:
         fields = data.strip().split()
@@ -80,8 +78,6 @@ def mapper_bench(infile):
         
         elif db1.has_key(cols[1]):
             mapper_swiss[cols[1]] = cols[0]
-
-    print "Mapping benchmark data to uniprot ids....."
 
     prediction_file = open(infile, 'r')
     for data in prediction_file:

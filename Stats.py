@@ -48,13 +48,13 @@ def plot_stats(benchmark_file, host_url=''):
 
     dist_ontology.clear()
     outfile = benchmark_file + '.sequence.fasta'
-    outfile_handle = open(outfile, 'a')
 
     NumOfProts = len(unique_proteins)
 
     if NumOfProts > 500 :
         response = raw_input('Downloading ' + str(NumOfProts) + ' sequences might take a while. Type y to continue or n to exit : ')
         if response == 'y':
+            outfile_handle = open(outfile, 'a')
             print 'Creating fasta file of benchmark protein sequences.'
             for prots in unique_proteins:
                 download_cmd = 'http://' + host_url + '?query=id:' + prots + '&format=fasta'                 
@@ -63,6 +63,7 @@ def plot_stats(benchmark_file, host_url=''):
             os.remove('protein_sequence.fasta')
         
     elif NumOfProts > 0:
+        outfile_handle = open(outfile, 'a')
         print 'Creating fasta file of benchmark protein sequences.'
         for prots in unique_proteins:
             download_cmd = 'http://' + host_url + '?query=id:' + prots + '&format=fasta'                 

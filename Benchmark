@@ -16,6 +16,7 @@ import ConfigParser
 import Config
 import Stats
 import FormatChecker
+from os.path import basename
 
 # The first step with using the argparse module is to create a parser object that can then parse all the user inputs and convert them into python objects based on the user input types provided
 
@@ -55,17 +56,17 @@ Config_handle = ConfigParser.ConfigParser()
 Config_handle.read('.cafarc')
 ConfigParam = defaultdict()
 
-ConfigParam = {'workdir' : Config.get('WORKDIR', 'DEFAULT_PATH'),
-               'ftp_host' : Config.get('FTP', 'HOSTNAME'),
-               'ftp_curr_path' : Config.get('FTP', 'CURRENT_FILE_PATH'),
-               'ftp_old_path' : Config.get('FTP', 'OLD_FILE_PATH'),
-               'exp_eec' : Config.get('DEFAULTS', 'EXP_EVIDENCE_CODES'),
-               'iea_eec' : Config.get('DEFAULTS', 'IEA_EVIDENCE_CODES'),
-               'ont_def' : Config.get('DEFAULTS', 'ONTOLOGIES'),
-               'tax_file' : Config.get('DEFAULTS', 'TAXONOMY_FILENAME'),
-               'uniprot_path' : Config.get('SEQUENCE', 'BASE_URL'),
-               'ftp_date' : Config.get('REGEX', 'FTP_DATE'),
-               'ftp_file_start' : Config.get('REGEX', 'FTP_FILE_START')
+ConfigParam = {'workdir' : Config_handle.get('WORKDIR', 'DEFAULT_PATH'),
+               'ftp_host' : Config_handle.get('FTP', 'HOSTNAME'),
+               'ftp_curr_path' : Config_handle.get('FTP', 'CURRENT_FILE_PATH'),
+               'ftp_old_path' : Config_handle.get('FTP', 'OLD_FILE_PATH'),
+               'exp_eec' : Config_handle.get('DEFAULTS', 'EXP_EVIDENCE_CODES'),
+               'iea_eec' : Config_handle.get('DEFAULTS', 'IEA_EVIDENCE_CODES'),
+               'ont_def' : Config_handle.get('DEFAULTS', 'ONTOLOGIES'),
+               'tax_file' : Config_handle.get('DEFAULTS', 'TAXONOMY_FILENAME'),
+               'uniprot_path' : Config_handle.get('SEQUENCE', 'BASE_URL'),
+               'ftp_date' : Config_handle.get('REGEX', 'FTP_DATE'),
+               'ftp_file_start' : Config_handle.get('REGEX', 'FTP_FILE_START')
                }
 
 work_dir = ConfigParam['workdir']
@@ -141,7 +142,7 @@ else:
     filename = t2_exp + '_bench.txt'
 
 if not outfile_basename == '':
-    ob = work_dir + '/' + outfile_basename 
+    ob = parsed_dict['outfile'] 
 else:
     ob = t2_input_file + '.benchmark'
 

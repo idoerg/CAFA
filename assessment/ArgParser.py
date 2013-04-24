@@ -43,7 +43,7 @@ def parse(parser):
         user_ontology = set(args.ontology)
         if 'all' in user_ontology:
             user_ontology = set(['F', 'P', 'C'])
-            print 'Ontology : ' + str(user_ontology)
+            print 'Ontology : ' + str('F' + ' P' + ' C')
         else:
             user_ontology = args.ontology
             print 'Ontology : ' + str(user_ontology)

@@ -114,10 +114,10 @@ def download(time_point,ftp,remote_dir,work_dir):
         print '\n' + time_point + ' file to be downloaded already present in working directory'
     else:
         print '\nThere is no file to be downloaded for time point ' + time_point
-        time_point = raw_input('Do you want to provide a different time point (either provide a time point or say no) : ')
+        time_point = raw_input('Do you want to provide a different time point (either provide a time point or say n) : ')
         if (re.match('[a-zA-Z]+\_\d+',time_point)) or (re.match('current',time_point)):
             [download_status, filename] = download(time_point,ftp,remote_dir,work_dir)
-        elif time_point == 'no':
+        elif time_point == 'n':
             sys.exit(1)
 
 

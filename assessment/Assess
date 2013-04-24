@@ -174,3 +174,15 @@ if pred_ann_cco and true_ann_cco:
     print "Assessing predictions in the cellular components category......"
     Compare.calc(pred_ann_cco, true_ann_cco, unique_prots_cco, ob, 'C')
 
+# Clean working directory
+
+if parsed_input['prop_status'] == 'F':
+    if os.path.exists(propagated_pred_file):
+        os.remove(propagated_pred_file)
+    if os.path.exists(propagated_bench_file):
+        os.remove(propagated_bench_file)
+
+if os.path.exists(final_pred_set):
+    os.remove(final_pred_set)
+if os.path.exists(final_bench_set):
+    os.remove(final_bench_set)

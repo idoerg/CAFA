@@ -9,6 +9,19 @@ import logging
 def parse(parser, ConfigParam=defaultdict()):
 
     EEC_default = ConfigParam['exp_eec']
+    date_dict = defaultdict()
+    date_dict = {'Jan' : 1,
+                 'Feb' : 2,
+                 'Mar' : 3,
+                 'Apr' : 4,
+                 'May' : 5,
+                 'Jun' : 6,
+                 'Jul' : 7,
+                 'Sep' : 8,
+                 'Oct' : 9,
+                 'Nov' : 10,
+                 'Dec' : 11
+                 }
 
     args, unknown = parser.parse_known_args()
 
@@ -61,9 +74,9 @@ def parse(parser, ConfigParam=defaultdict()):
 
         user_EVI = set(args.evidence)
         if 'ALL' in user_EVI:
-            user_EVI = EEC_default
+            user_EVI = set([])
     else:
-        user_EVI = EEC_default
+        user_EVI = set([])
 
     sys.stdout.write('\n')
     sys.stdout.write("CafaMode : ")
@@ -168,17 +181,20 @@ def parse(parser, ConfigParam=defaultdict()):
 
     if t1_file == t2_file:
         logging.warning('Both input files are from the same time point. This will not create a valid benchmark')
-        
+
+    if len(t1_file.split('_')) == 2 and len(t2_file.split('_')) == 2:
+        if date_dict[t1_file.split('_')[0].capitalize()] > date_dict[t2_file.split('_')[0].capitalize()]:
+            logging.warning('Input1 is at a later time point than input2. This will not create a valid benchmark')
     
-    user_dict = {'user_ORG' : user_ORG,
-                 'user_ONT' : user_ONT,
-                 'user_EVI' : user_EVI,
-                 'user_mode': user_mode,
-                 'user_source' : user_source,
-                 'user_pubmed' : user_pubmed,
-                 'user_conf' : user_conf,
-                 'user_thresh' : user_thresh,
-                 'black_set' : black_set,
+    user_dict = {'Taxon_ID' : user_ORG,
+                 'Aspect' : user_ONT,
+                 'Evidence' : user_EVI,
+                 'Mode': user_mode,
+                 'Assigned_By' : user_source,
+                 'Pubmed' : user_pubmed,
+                 'Confidence' : user_conf,
+                 'Threshold' : user_thresh,
+                 'Blacklist' : black_set,
                  't1' : t1_file,
                  't2' : t2_file,
                  'outfile' : outfile

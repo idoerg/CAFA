@@ -8,11 +8,12 @@ from collections import defaultdict
 import subprocess
 import urllib
 
-def plot_stats(benchmark_file, host_url=''):
+def plot_stats(benchmark_file):
     x_val = []
     y_val = []
     dist_ontology = defaultdict(lambda:defaultdict())
-    unique_proteins = defaultdict()
+    unique_proteins_new = {}
+    unique_proteins = {}
     pname = benchmark_file + '.png'
     xTickNames = []
     index = 0
@@ -22,9 +23,10 @@ def plot_stats(benchmark_file, host_url=''):
 
     infile_handle = open(benchmark_file, 'r')
     for lines in infile_handle:
-        fields = lines.strip().split()
+        fields = lines.strip().split('\t')
+        unique_proteins[fields[0]] = 1
         if fields[-1] == 'N':
-            unique_proteins[fields[0]] = 1
+            unique_proteins_new[fields[0]] = 1
         dist_ontology[fields[2]][fields[0]] = 1
 
     infile_handle.close()
@@ -47,30 +49,9 @@ def plot_stats(benchmark_file, host_url=''):
     fig.savefig(pname.strip())
 
     dist_ontology.clear()
-    outfile = benchmark_file + '.sequence.fasta'
 
-    NumOfProts = len(unique_proteins)
-
-    if NumOfProts > 500 :
-        response = raw_input('Downloading ' + str(NumOfProts) + ' sequences might take a while. Type y to continue or n to exit : ')
-        if response == 'y':
-            outfile_handle = open(outfile, 'a')
-            print 'Creating fasta file of benchmark protein sequences.'
-            for prots in unique_proteins:
-                download_cmd = 'http://' + host_url + '?query=id:' + prots + '&format=fasta'                 
-                urllib.urlretrieve(download_cmd, 'protein_sequence.fasta')
-                subprocess.call(['cat -s protein_sequence.fasta ' + '>> ' + outfile], shell=True) 
-            os.remove('protein_sequence.fasta')
-        
-    elif NumOfProts > 0:
-        outfile_handle = open(outfile, 'a')
-        print 'Creating fasta file of benchmark protein sequences.'
-        for prots in unique_proteins:
-            download_cmd = 'http://' + host_url + '?query=id:' + prots + '&format=fasta'                 
-            urllib.urlretrieve(download_cmd, 'protein_sequence.fasta')
-            subprocess.call(['cat -s protein_sequence.fasta ' + '>> ' + outfile], shell=True) 
-        os.remove('protein_sequence.fasta')
+    return unique_proteins_old, unique_proteins_new, unique_proteins
 
 if __name__ == '__main__' :
     infile = sys.argv[1]
-    plot_stats(infile, host_url='www.uniprot.org/uniprot/')
+    plot_stats(infile)

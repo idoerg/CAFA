@@ -8,7 +8,6 @@ import argparse
 import shutil
 import ArgParser
 import CreateDataset
-import FilterDataset
 import CreateBenchmark
 import PaperTermFrequency
 import subprocess
@@ -16,7 +15,10 @@ import ConfigParser
 import Config
 import Stats
 import FormatChecker
+import SeqDownload
 from os.path import basename
+import GOAParser_cafa
+import GOAParser
 
 # The first step with using the argparse module is to create a parser object that can then parse all the user inputs and convert them into python objects based on the user input types provided
 
@@ -84,14 +86,14 @@ outfile_basename = basename(parsed_dict['outfile'])
 
 # At this point once all input parameters are validated, validation of file format should be done to make sure users input file in appropriate format
 
-if parsed_dict['user_conf'] == 'T':
-    paper_threshold = parsed_dict['user_thresh']
+if parsed_dict['Confidence'] == 'T':
+    paper_threshold = parsed_dict['Threshold']
     ann_conf_filter = True
 else:
     ann_conf_filter = False
     paper_threshold = 0
 
-if parsed_dict['user_mode'] == 'T':
+if parsed_dict['Mode'] == 'T':
     t1_input_file = work_dir + '/' + CreateDataset.parse_cafa(t1, ConfigParam)
 else:
     t1_input_file = work_dir + '/' + CreateDataset.parse(t1, ConfigParam)
@@ -100,7 +102,7 @@ t2_input_file = work_dir + '/' + CreateDataset.parse(t2, ConfigParam)
 
 # Add format checker module here
 
-FormatChecker.check(t1_input_file, t2_input_file,parsed_dict['user_mode'])
+FormatChecker.check(t1_input_file, t2_input_file,parsed_dict['Mode'])
 
 if not os.path.exists(t2_input_file + '_with_annotations_per_paper.txt'):
     paper_annotation_freq  = t2_input_file + '_with_annotations_per_paper.txt'
@@ -110,7 +112,7 @@ else:
     paper_conf_filter = False
 
 if ann_conf_filter or paper_conf_filter : 
-    [ann_conf, paper_conf] = PaperTermFrequency.count(t2_input_file, parsed_dict['user_EVI'], ann_conf_filter, paper_conf_filter)
+    [ann_conf, paper_conf] = PaperTermFrequency.count(t2_input_file, parsed_dict['Evidence'], ann_conf_filter, paper_conf_filter)
 
     if len(paper_conf) > 0:
         for i in paper_conf:
@@ -121,21 +123,46 @@ else:
     ann_conf = defaultdict(lambda:defaultdict(set))
 
 # The next step is to parse t1 file into separate ontologies
+t2_handle = open(t2_input_file, 'r')
+iter_handle = GOAParser.gafiterator(t2_handle)
+for ingen in iter_handle:
+    if len(ingen) == 17:
+        GAFFIELDS = GOAParser.GAF20FEILDS
+        break
+    else:
+        GAFFIELDS = GOAParser.GAF10FIELDS
+        break
 
-FilterDataset.t2_filter(t2_input_file, parsed_dict['user_ONT'], parsed_dict['user_EVI'], parsed_dict['user_ORG'], parsed_dict['user_source'], parsed_dict['user_pubmed'], parsed_dict['black_set'], ann_conf, paper_threshold, ConfigParam['tax_file'])
+tax_id_name_mapping = GOAParser_cafa.parse_tax_file(ConfigParam['tax_file'])
+outfile = open(t2_handle.name + '.exponly', 'w')
+
+print "Parsing t2 file " + basename(t2_input_file)
+
+for ingen in iter_handle:
+    GOAParser_cafa.record_has_extended(ingen, ann_conf, parsed_dict, tax_id_name_mapping, ConfigParam['exp_eec'],outfile,GAFFIELDS)
+
 t2_exp = t2_input_file + '.exponly'
 
 if os.stat(t2_exp).st_size == 0:
     print "Your benchmark set will be empty with the parameters provided."
     sys.exit(1)
 
-if parsed_dict['user_mode'] == 'T':
+if parsed_dict['Mode'] == 'T':
     t1_iea = t1_input_file + '.iea1'
     CreateBenchmark.parse_cafa(t2_exp, t1_iea)
     filename = t2_exp + '_bench.txt'
     
 else:
-    FilterDataset.t1_filter_pass1(t1_input_file, t2_exp, ConfigParam['iea_eec'], ConfigParam['exp_eec'])
+    t1_handle = open(t1_input_file, 'r')
+    iter_handle = GOAParser.gafiterator(t1_handle)
+    for ingen in iter_handle:
+        if len(ingen) == 17:
+            GAFFIELDS = GOAParser.GAF20FEILDS
+            break
+        else:
+            GAFFIELDS = GOAParser.GAF10FIELDS
+            break
+    GOAParser_cafa.t1_filter(iter_handle, t2_exp, t1_handle.name, GAFFIELDS, ConfigParam['iea_eec'], ConfigParam['exp_eec'])
     t1_iea_handle = open(t1_input_file + '.iea1' , 'r')
     t1_exp_handle = open(t1_input_file + '.exp1' , 'r')
     CreateBenchmark.parse(t1_iea_handle, t1_exp_handle, t2_exp, ConfigParam['iea_eec'], ConfigParam['exp_eec'])
@@ -155,7 +182,12 @@ if os.stat(filename).st_size == 0:
     print "Your benchmark set is empty."
 else:
     subprocess.call(['sort ' + filename + '| uniq > ' + output_filename], shell=True)
-    Stats.plot_stats(output_filename, uniprot_path)
+    unique_proteins_old, unique_proteins_new, unique_proteins = Stats.plot_stats(output_filename)
+    response = raw_input('What kind of protein sequences do you want in your benchmark file : enter 1 if you want only proteins with novel annotation or 0 if you want all : ')
+    if response == '1':
+        SeqDownload.down(output_filename, uniprot_path, unique_proteins_new)
+    else:
+        SeqDownload.down(output_filename, uniprot_path, unique_proteins)
 
 print 'Cleaning working directory....'
 
@@ -171,4 +203,4 @@ for root, dirs, files in os.walk(work_dir):
         if os.path.getsize(root + '/' + fname) == 0:
             os.remove(root + '/' + fname)
 
-print 'Thank you for using the Benchmark Creator Software'
+print 'Thank you for using the Benchmark Creator Software.'

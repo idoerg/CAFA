@@ -6,9 +6,8 @@ import re
 from collections import defaultdict
 import argparse
 import shutil
-import ArgParser_mod
+import ArgParser
 import CreateDataset
-import FilterDataset
 import CreateBenchmark
 import PaperTermFrequency
 import subprocess
@@ -79,11 +78,13 @@ uniprot_path = ConfigParam['uniprot_path'] .rstrip('/')
 if not os.path.exists(work_dir):
     os.makedirs(work_dir)
 
-parsed_dict = ArgParser_mod.parse(parser, ConfigParam)
+parsed_dict = ArgParser.parse(parser, ConfigParam)
 
 t1 = parsed_dict['t1']
 t2 = parsed_dict['t2']
 outfile_basename = basename(parsed_dict['outfile'])
+
+print parsed_dict
 
 # At this point once all input parameters are validated, validation of file format should be done to make sure users input file in appropriate format
 

@@ -6,8 +6,9 @@ import re
 from collections import defaultdict
 import argparse
 import shutil
-import ArgParser
+import ArgParser_mod
 import CreateDataset
+import FilterDataset
 import CreateBenchmark
 import PaperTermFrequency
 import subprocess
@@ -31,9 +32,9 @@ parser.add_argument('-G','--organism',nargs='*', default=['all'],help='Provides 
 parser.add_argument('-N','--ontology',nargs='*', default=['all'],help='Provides user a choice to specify a set of ontologies (F, P, C) separated by space. Default is all.')
 parser.add_argument('-V','--evidence',nargs='*', default=['all'],help='Provides user a choice to specify a set of GO experimental evidence codes (example: IPI, IDA, EXP) separated by space.Default is all.')
 parser.add_argument('-C','--cafa', default='F' ,help='Takes in either T or F. If specified as T, user needs to provide a CAFA targets file as input1. If F, program will take in a uniprot-goa file as input1. Default is F')
-parser.add_argument('-I1', '--input1', nargs='*', help='This opton is mandatory. Specifies path to the first input file.')
-parser.add_argument('-I2', '--input2', nargs='*', help='This option is mandatory. Specifies path to the second input file.')
-parser.add_argument('-O', '--output', nargs='*',default=[], help='Optional argument.Provides user an option to specify an output filename.')
+parser.add_argument('-I1', '--input1', help='This opton is mandatory. Specifies path to the first input file.')
+parser.add_argument('-I2', '--input2', help='This option is mandatory. Specifies path to the second input file.')
+parser.add_argument('-O', '--output', default='', help='Optional argument.Provides user an option to specify an output filename.')
 parser.add_argument('-S', '--source',action='store' ,nargs='*',default=['all'],help='Provides user a choice to specify sources (example: UniProt, InterPro) separated by spaces. Default is all.')
 parser.add_argument('-P', '--pubmed',default='F',help='Allows user to turn on the pubmed filter. If turned on, GO terms w/o any Pubmed references will not be considered part of the benchmark set.By default, it is turned off.')
 parser.add_argument('-F', '--confidence',default='F',help='Allows user to turn on the annotation confidence filter. If turned on, GO terms assignments to proteins that are documented in few papers (4 or less by default) will not be considered part of the benchmark set.By default, it is turned off.')
@@ -78,7 +79,7 @@ uniprot_path = ConfigParam['uniprot_path'] .rstrip('/')
 if not os.path.exists(work_dir):
     os.makedirs(work_dir)
 
-parsed_dict = ArgParser.parse(parser, ConfigParam)
+parsed_dict = ArgParser_mod.parse(parser, ConfigParam)
 
 t1 = parsed_dict['t1']
 t2 = parsed_dict['t2']
@@ -182,7 +183,7 @@ if os.stat(filename).st_size == 0:
     print "Your benchmark set is empty."
 else:
     subprocess.call(['sort ' + filename + '| uniq > ' + output_filename], shell=True)
-    unique_proteins_old, unique_proteins_new, unique_proteins = Stats.plot_stats(output_filename)
+    unique_proteins_new, unique_proteins = Stats.plot_stats(output_filename)
     response = raw_input('What kind of protein sequences do you want in your benchmark file : enter 1 if you want only proteins with novel annotation or 0 if you want all : ')
     if response == '1':
         SeqDownload.down(output_filename, uniprot_path, unique_proteins_new)

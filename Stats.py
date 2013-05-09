@@ -50,7 +50,7 @@ def plot_stats(benchmark_file):
 
     dist_ontology.clear()
 
-    return unique_proteins_old, unique_proteins_new, unique_proteins
+    return unique_proteins_new, unique_proteins
 
 if __name__ == '__main__' :
     infile = sys.argv[1]

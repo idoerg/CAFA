@@ -53,9 +53,14 @@ def record_has_extended(inupgrec, ann_freq, allowed, tax_name_id_mapping, EEC_de
             break
         if not inupgrec.has_key(field):
             if field == 'Pubmed':
+                if type(inupgrec['DB:Reference']) is type(''):
+                    rec_set = set([inupgrec['DB:Reference']])
+                else:
+                    rec_set = set(inupgrec['DB:Reference'])
                 # if there are multiple pubmed identifiers per record, we could change the command below to this
                 # if allowed[field] == 'T' and '' in inupgrec['DB:Reference']:
-                if allowed[field] == 'T' and inupgrec['DB:Reference'] == '':
+                if allowed[field] == 'T' and rec_set[0] == '':
+                #if allowed[field] == 'T' and inupgrec['DB:Reference'] == '':
                     retval=False
                     break
             elif field == 'Confidence':
@@ -65,9 +70,14 @@ def record_has_extended(inupgrec, ann_freq, allowed, tax_name_id_mapping, EEC_de
                     retval=False                                                                                                            
                     break
             elif field == 'Blacklist':
+                if type(inupgrec['DB:Reference']) is type(''):
+                    rec_set = set([inupgrec['DB:Reference']])
+                else:
+                    rec_set = set(inupgrec['DB:Reference'])
                 # if there are multiple pubmed identifiers per record, we could change the command below to this
                 # if allowed[field] == 'T' and len(inupgrec['DB:Reference'].intersection(allowed[field])) > 0:
-                 if inupgrec['DB:Reference'] in allowed[field]:
+                if len(rec_set & allowed[field]) > 0:
+                 #if inupgrec['DB:Reference'] in allowed[field]:
                      retval=False
                      break
             else:
@@ -81,12 +91,20 @@ def record_has_extended(inupgrec, ann_freq, allowed, tax_name_id_mapping, EEC_de
             # In case if a record has multiple taxon ids associated with it, loop through each taxon
             # and check if it matches the allowed values or not or check for an intersection between the 2 sets
             # If the intersection set is > 0, we keep the record. Else, we discard it
-            if tax_name_id_mapping.has_key(inupgrec[field].split(':')[1]):
-                organism = tax_name_id_mapping[inupgrec[field].split(':')[1]]
-            if organism in allowed[field] or inupgrec[field].split(':')[1] in allowed[field]:
-                retval=True
+            if type(inupgrec[field]) is type(''):
+                rec_set =set([inupgrec[field]])
             else:
-                retval=False
+                rec_set = set(inupgrec[field])
+
+            for rec in rec_set:
+                if tax_name_id_mapping.has_key(rec.split(':')[1]):
+                    organism = tax_name_id_mapping[rec.split(':')[1]]
+                if organism in allowed[field] or rec.split(':')[1] in allowed[field]:
+                    retval=True
+                    break
+                else:
+                    retval=False
+            if not retval:
                 break
         else:
             if inupgrec[field] not in allowed[field]:

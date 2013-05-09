@@ -8,6 +8,7 @@ import argparse
 import shutil
 import ArgParser
 import CreateDataset
+import FilterDataset
 import CreateBenchmark
 import PaperTermFrequency
 import subprocess
@@ -84,8 +85,6 @@ t1 = parsed_dict['t1']
 t2 = parsed_dict['t2']
 outfile_basename = basename(parsed_dict['outfile'])
 
-print parsed_dict
-
 # At this point once all input parameters are validated, validation of file format should be done to make sure users input file in appropriate format
 
 if parsed_dict['Confidence'] == 'T':
@@ -114,7 +113,8 @@ else:
     paper_conf_filter = False
 
 if ann_conf_filter or paper_conf_filter : 
-    [ann_conf, paper_conf] = PaperTermFrequency.count(t2_input_file, parsed_dict['Evidence'], ann_conf_filter, paper_conf_filter)
+    if not os.path.exists(t2_input_file + '_with_annotations_per_paper.txt'):
+        [ann_conf, paper_conf] = PaperTermFrequency.count(t2_input_file, parsed_dict['Evidence'], ann_conf_filter, paper_conf_filter)
 
     if len(paper_conf) > 0:
         for i in paper_conf:
@@ -129,7 +129,7 @@ t2_handle = open(t2_input_file, 'r')
 iter_handle = GOAParser.gafiterator(t2_handle)
 for ingen in iter_handle:
     if len(ingen) == 17:
-        GAFFIELDS = GOAParser.GAF20FEILDS
+        GAFFIELDS = GOAParser.GAF20FIELDS
         break
     else:
         GAFFIELDS = GOAParser.GAF10FIELDS
@@ -159,7 +159,7 @@ else:
     iter_handle = GOAParser.gafiterator(t1_handle)
     for ingen in iter_handle:
         if len(ingen) == 17:
-            GAFFIELDS = GOAParser.GAF20FEILDS
+            GAFFIELDS = GOAParser.GAF20FIELDS
             break
         else:
             GAFFIELDS = GOAParser.GAF10FIELDS

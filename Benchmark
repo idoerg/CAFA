@@ -107,12 +107,13 @@ FormatChecker.check(t1_input_file, t2_input_file,parsed_dict['Mode'])
 if not os.path.exists(t2_input_file + '_with_annotations_per_paper.txt'):
     paper_annotation_freq  = t2_input_file + '_with_annotations_per_paper.txt'
     paper_conf_filter = True
-    paper_ann_freq_handle = open(paper_annotation_freq, 'w')
 else:
     paper_conf_filter = False
 
 if ann_conf_filter or paper_conf_filter : 
+    paper_conf = {}
     if not os.path.exists(t2_input_file + '_with_annotations_per_paper.txt'):
+        paper_ann_freq_handle = open(paper_annotation_freq, 'w')
         [ann_conf, paper_conf] = PaperTermFrequency.count(t2_input_file, parsed_dict['Evidence'], ann_conf_filter, paper_conf_filter)
 
     if len(paper_conf) > 0:

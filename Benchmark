@@ -8,7 +8,6 @@ import argparse
 import shutil
 import ArgParser
 import CreateDataset
-import FilterDataset
 import CreateBenchmark
 import PaperTermFrequency
 import subprocess

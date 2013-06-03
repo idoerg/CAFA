@@ -209,10 +209,10 @@ else:
         CreateBenchmark.parse_cafa(t2_exp, t1_iea)
     else:
         iter_handle, GAFFIELDS = create_iterator(t1_input_file)    
-        GOAParser_cafa.t1_filter(iter_handle, t2_exp, t1_input_file, GAFFIELDS, ConfigParam['iea_eec'], ConfigParam['exp_eec'])
+        GOAParser_cafa.t1_filter(iter_handle, t2_exp, t1_input_file, GAFFIELDS, ConfigParam['exp_eec'])
         t1_iea_handle = open(t1_input_file + '.iea1' , 'r')
         t1_exp_handle = open(t1_input_file + '.exp1' , 'r')
-        CreateBenchmark.parse(t1_iea_handle, t1_exp_handle, t2_exp, ConfigParam['iea_eec'], ConfigParam['exp_eec'])
+        CreateBenchmark.parse(t1_iea_handle, t1_exp_handle, t2_exp, ConfigParam['exp_eec'])
  
     # Checks the size of the benchmark file created. If empty, program will quit with a message.
     # Else, will proceed to create the sequence file based on user requirement

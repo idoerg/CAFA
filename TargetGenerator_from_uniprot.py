@@ -29,15 +29,20 @@ def parse_gpi(infile, taxon=''):
     infile_handle = open(infile, 'r')
     print 'Extracing Swiss Prot ids for the taxa specified'
 
-    for lines in infile_handle:
-        lines.strip()
-        if lines.startswith('!'):
-            continue
-        fields = lines.split('\t')
-        db = fields[8].split('=')[1].strip()
-        taxid = fields[5].split(':')[1].strip()
+    parser = GOAParser.gpi_iterator(infile_handle)
+
+    for rec in parser:
+        if not rec.has_key('Gene_Product_Properties'):
+            print "This version of the gp information file does not contain all required information"
+            sys.exit(1)
+        else:
+            break
+
+    for rec in parser:
+        taxid = rec['Taxon'].split(':')[1].strip()
+        db = rec['Gene_Product_Properties'][0].split('=')[1].strip()
         if db.startswith('Swiss-Prot') and taxon == taxid:
-            sp_id[fields[0]] = 1
+            sp_id[rec['DB_Object_ID']] = 1
 
     return sp_id
 

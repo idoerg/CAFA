@@ -12,24 +12,30 @@ def extract_args(args):
     #If they have been passed, it will take the values passed. Else, will assume default values. 
     #If a new parameter is to be added to the program, it should be added into this dictionary
     args_dict = {}
-    try:
-        args_dict = {'Taxon_ID' : args.organism,
-                     'Aspect' : args.ontology,
-                     'Evidence' : args.evidence,
-                     'Mode' : args.cafa,
-                     'outfile' : args.output,
-                     'Assigned_By' : args.source,
-                     'Pubmed' : args.pubmed,
-                     'Confidence' : args.confidence,
-                     'Threshold' : args.threshold,
-                     'Blacklist' : args.blacklist,
-                     't1' : args.input1,
-                     't2' : args.input2
-                     }
-    except:
-        print 'Missing some parameter values.\n'
-        sys.exit(1)
-        
+    
+    args_dict = {'Taxon_ID' : args.organism,
+                 'Aspect' : args.ontology,
+                 'Evidence' : args.evidence,
+                 'Mode' : args.cafa,
+                 'outfile' : args.output,
+                 'Assigned_By' : args.source,
+                 'Pubmed' : args.pubmed,
+                 'Confidence' : args.confidence,
+                 'Threshold' : args.threshold,
+                 'Blacklist' : args.blacklist,
+                 't1' : args.input1,
+                 't2' : args.input2,
+                 'Target' : args.targetType,
+                 'Program' : args.mode
+                 }
+
+    print "*************************************************"
+    if args_dict['Program'] == 'BC':
+        print "Welcome to the Benchmark Creation tool !!!!!"
+    else:
+        print "Welcome to the Target Generation tool !!!!!"
+
+    print "*************************************************\n"
     print 'Following is a list of user supplied inputs :\n'
     for arg in args_dict:
         print arg + ' : ' + str(args_dict[arg])
@@ -53,6 +59,7 @@ def check_args(args_dict,parser):
                 user_dict['t1'] = args_dict[arg]
 
         elif arg == 't2':
+            #if args_dict['Program'] == 'BC' and args_dict[arg] == None:
             if args_dict[arg] == None:
                 print 'Missing T2 file\n'
                 print parser.parse_args(['--help'])
@@ -63,12 +70,16 @@ def check_args(args_dict,parser):
             user_dict[arg] = args_dict[arg]
         elif arg == 'Confidence':
             user_dict[arg] = args_dict[arg]
-
+            
         elif arg == 'outfile':
             user_dict[arg] = args_dict[arg]
         elif arg == 'Mode':
             user_dict[arg] = args_dict[arg]
-
+        elif arg == 'Target':
+            user_dict[arg] = args_dict[arg]
+        elif arg == 'Program':
+            user_dict[arg] = args_dict[arg]
+            
         elif arg == 'Taxon_ID':
             if 'all' in args_dict[arg] or len(args_dict[arg]) == 0:
                 user_dict[arg] = set([])
@@ -106,6 +117,7 @@ def parse(parser, ConfigParam=defaultdict()):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(prog='bm.py',description='Creates a set of benchmark proteins')
+    parser.add_argument('-M', '--mode', default='BC', help='This option allows the user to run the program either as a Benchmark Creator or aTarget Generator. It takes in values of BC or TG. Default, if not provided is BC.')
     parser.add_argument('-G','--organism',nargs='*', default=['all'],help='Provides user a choice to specify a set of organisms (example:Saccharomyces cerevisiae or 7227) separated by space.Default is all.')
     parser.add_argument('-N','--ontology',nargs='*', default=['all'],help='Provides user a choice to specify a set of ontologies (F, P, C) separated by space. Default is all.')
     parser.add_argument('-V','--evidence',nargs='*', default=['all'],help='Provides user a choice to specify a set of GO experimental evidence codes (example: IPI, IDA, EXP) separated by space.Default is all.')

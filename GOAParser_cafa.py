@@ -4,6 +4,7 @@ import os
 import sys
 import GOAParser
 from os.path import basename
+from collections import defaultdict
 
 def parse_tax_file(tax_filename):
     tax_id_name_mapping = {}
@@ -35,7 +36,7 @@ def gafiterator_extended(handle):
         return GOAParser._gaf10iterator(handle),GOAParser.GAF10FIELDS
     
 
-def record_has_extended(inupgrec, ann_freq, allowed, tax_name_id_mapping, EEC_default, outfile, GAFFIELDS):
+def record_has_forBenchmark(inupgrec, ann_freq, allowed, tax_name_id_mapping, EEC_default, outfile, GAFFIELDS):
     """                                                                                                                                   
     Accepts a gaf record, and a dictionary of allowed field values. The                                                                  
     format is {'field_name': set([val1, val2])}.                                                                                         
@@ -57,10 +58,7 @@ def record_has_extended(inupgrec, ann_freq, allowed, tax_name_id_mapping, EEC_de
                     rec_set = set([inupgrec['DB:Reference']])
                 else:
                     rec_set = set(inupgrec['DB:Reference'])
-                # if there are multiple pubmed identifiers per record, we could change the command below to this
-                # if allowed[field] == 'T' and '' in inupgrec['DB:Reference']:
                 if allowed[field] == 'T' and rec_set[0] == '':
-                #if allowed[field] == 'T' and inupgrec['DB:Reference'] == '':
                     retval=False
                     break
             elif field == 'Confidence':
@@ -74,10 +72,7 @@ def record_has_extended(inupgrec, ann_freq, allowed, tax_name_id_mapping, EEC_de
                     rec_set = set([inupgrec['DB:Reference']])
                 else:
                     rec_set = set(inupgrec['DB:Reference'])
-                # if there are multiple pubmed identifiers per record, we could change the command below to this
-                # if allowed[field] == 'T' and len(inupgrec['DB:Reference'].intersection(allowed[field])) > 0:
                 if len(rec_set & allowed[field]) > 0:
-                 #if inupgrec['DB:Reference'] in allowed[field]:
                      retval=False
                      break
             else:
@@ -88,9 +83,6 @@ def record_has_extended(inupgrec, ann_freq, allowed, tax_name_id_mapping, EEC_de
             continue
 
         if field == 'Taxon_ID':
-            # In case if a record has multiple taxon ids associated with it, loop through each taxon
-            # and check if it matches the allowed values or not or check for an intersection between the 2 sets
-            # If the intersection set is > 0, we keep the record. Else, we discard it
             if type(inupgrec[field]) is type(''):
                 rec_set =set([inupgrec[field]])
             else:
@@ -114,14 +106,89 @@ def record_has_extended(inupgrec, ann_freq, allowed, tax_name_id_mapping, EEC_de
     if retval:
         GOAParser.writerec(inupgrec,outfile, GAFFIELDS)
 
+def record_has_forTarget(inupgrec, ann_freq, allowed, tax_name_id_mapping, EEC_default, outfile1, outfile2, GAFFIELDS):
+    """                                                                                                                                   
+    Accepts a gaf record, and a dictionary of allowed field values. The                                                                  
+    format is {'field_name': set([val1, val2])}.                                                                                         
+    If any field in the record has an allowed value, the function stops                                                                  
+    searching and returns                                                                                                                
+    False. Otherwise, returns true.                                                                                                      
+    """
+
+    retval=True
+    organism = ''
+
+    for field in allowed:
+        if not inupgrec.has_key(field):
+            if field == 'Pubmed':
+                if type(inupgrec['DB:Reference']) is type(''):
+                    rec_set = set([inupgrec['DB:Reference']])
+                else:
+                    rec_set = set(inupgrec['DB:Reference'])
+                if allowed[field] == 'T' and rec_set[0] == '':
+                #if allowed[field] == 'T' and inupgrec['DB:Reference'] == '':
+                    retval=False
+                    break
+            elif field == 'Confidence':
+                db_id = inupgrec['DB_Object_ID']                                                                                             
+                go_id = inupgrec['GO_ID']                                                                                                   
+                if allowed[field] == 'T' and len(ann_freq[db_id][go_id]) < allowed['Threshold']:                                             
+                    retval=False                                                                                                            
+                    break
+            elif field == 'Blacklist':
+                if type(inupgrec['DB:Reference']) is type(''):
+                    rec_set = set([inupgrec['DB:Reference']])
+                else:
+                    rec_set = set(inupgrec['DB:Reference'])
+                if len(rec_set & allowed[field]) > 0:
+                 #if inupgrec['DB:Reference'] in allowed[field]:
+                     retval=False
+                     break
+            else:
+                continue
+            continue
+
+        if len(allowed[field]) == 0:
+            continue
+
+        if field == 'Taxon_ID':
+            if type(inupgrec[field]) is type(''):
+                rec_set =set([inupgrec[field]])
+            else:
+                rec_set = set(inupgrec[field])
+
+            for rec in rec_set:
+                if tax_name_id_mapping.has_key(rec.split(':')[1]):
+                    organism = tax_name_id_mapping[rec.split(':')[1]]
+                if organism in allowed[field] or rec.split(':')[1] in allowed[field]:
+                    retval=True
+                    break
+                else:
+                    retval=False
+            if not retval:
+                break
+        else:
+            if inupgrec[field] not in allowed[field]:
+                retval=False
+                break        
+        
+    if retval:
+        if inupgrec['Evidence'] == 'IEA':
+            GOAParser.writerec(inupgrec,outfile1, GAFFIELDS)
+        elif inupgrec['Evidence'] in EEC_default:
+            GOAParser.writerec(inupgrec,outfile2, GAFFIELDS)
+
 def t1_filter(t1_iter, t2_exp, t1_file, GAFFIELDS, IEA_default=set([]),EXP_default=set([])):
 
     t2_exp_handle = open(t2_exp, 'r')
     
-    exp_pid_dict = {}
+    exp_pid_dict = defaultdict(lambda:defaultdict())
+
     for inline in t2_exp_handle:
-        inrec = inline.strip().split('\t')
-        exp_pid_dict[inrec[1]] = None
+        inrec = inline.strip('\n').split('\t')
+        if len(inrec) < 15:
+            continue
+        exp_pid_dict[inrec[1]][inrec[8]] = 1
 
     t2_exp_handle.close()
 
@@ -132,10 +199,11 @@ def t1_filter(t1_iter, t2_exp, t1_file, GAFFIELDS, IEA_default=set([]),EXP_defau
 
     for rec in t1_iter:
         if exp_pid_dict.has_key(rec['DB_Object_ID']):
-            if rec['Evidence'] in IEA_default:
-                GOAParser.writerec(rec, outfile1,GAFFIELDS)
-            elif rec['Evidence'] in EXP_default:
-                GOAParser.writerec(rec, outfile2, GAFFIELDS)
+            if exp_pid_dict[rec['DB_Object_ID']].has_key(rec['Aspect']):
+                if not rec['Evidence'] in EXP_default:
+                    GOAParser.writerec(rec, outfile1,GAFFIELDS)
+                elif rec['Evidence'] in EXP_default:
+                    GOAParser.writerec(rec, outfile2, GAFFIELDS)
 
     outfile1.close()
     outfile2.close()

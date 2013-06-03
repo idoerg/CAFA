@@ -8,7 +8,7 @@ import urllib
 import subprocess
 
 def down(infile, host_url, unique_proteins):
-    outfile = infile + '.sequence.fasta'
+    outfile = infile + '.fasta'
     outfile_handle = open(outfile, 'a')
 
     NumOfProts = len(unique_proteins)
@@ -16,7 +16,7 @@ def down(infile, host_url, unique_proteins):
     if NumOfProts > 500 :
         response = raw_input('Downloading ' + str(NumOfProts) + ' sequences might take a while. Type y to continue or n to exit : ')
         if response == 'y':
-            print 'Creating fasta file of benchmark protein sequences.'
+            print 'Creating fasta file of protein sequences.'
             for prots in unique_proteins:
                 download_cmd = 'http://' + host_url + '?query=id:' + prots + '&format=fasta'
                 urllib.urlretrieve(download_cmd, 'protein_sequence.fasta')
@@ -24,7 +24,7 @@ def down(infile, host_url, unique_proteins):
             os.remove('protein_sequence.fasta')
 
     elif NumOfProts > 0:
-        print 'Creating fasta file of benchmark protein sequences.'
+        print 'Creating fasta file of protein sequences.'
         for prots in unique_proteins:
             download_cmd = 'http://' + host_url + '?query=id:' + prots + '&format=fasta'
             urllib.urlretrieve(download_cmd, 'protein_sequence.fasta')

@@ -74,6 +74,8 @@ def parse(t1_iea, t1_exp, t2_exp, iea_default=set([]), EEC_default=set([])):
 
     for lines in t2_handle:
         fields = lines.strip().split('\t')
+        if len(fields) < 15:
+            continue
         if t1_exp_dict.has_key(fields[1]):
             if t1_exp_dict[fields[1]].has_key(fields[8]):
                 if not fields[4] in t1_exp_dict[fields[1]][fields[8]]:
@@ -109,11 +111,12 @@ def parse_cafa(t2_file, t1_file):
     t2_file_handle = open(t2_file, 'r')
     
     for lines in t2_file_handle:
-        fields = lines.strip().split()
-        if t1_dict.has_key(fields[0]):
-            print >> outfile, fields[0] + '\t' + fields[2] + '\t' + fields[1] + '\t' + 'N'
-        elif t1_dict.has_key(fields[-1]):
-            print >> outfile, fields[0] + '\t' + fields[2] + '\t' + fields[1] + '\t' + 'N'
+        fields = lines.strip().split('\t')
+        swiss_id = fields[10].split('|')[0]
+        if t1_dict.has_key(fields[1]):
+            print >> outfile, fields[1] + '\t' + fields[4] + '\t' + fields[8] + '\t' + 'N'
+        elif t1_dict.has_key(swiss_id):
+            print >> outfile, fields[1] + '\t' + fields[4] + '\t' + fields[8] + '\t' + 'N'
 
     t1_dict.clear()
     t2_file_handle.close()

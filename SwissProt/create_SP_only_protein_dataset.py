@@ -4,7 +4,7 @@ import os
 import sys
 from collections import defaultdict
 import sqlite3
-import GOAParser
+import GOAParser # In future, this module will be replaced with the Bio-Python module GOA.py in Bio.UniProt
 
 '''
            This script extracts all swiss prot proteins , for a particular taxon, along with its associated information
@@ -27,17 +27,23 @@ def parse_gpi(infile, taxon=''):
     sp_id = defaultdict()
 
     infile_handle = open(infile, 'r')
-    for lines in infile_handle:
-        lines.strip()
-        if lines.startswith('!'):
-            continue
-        fields = lines.split('\t')
-        db = fields[8].split('=')[1].strip()
-        taxid = fields[5].split(':')[1].strip()
+    parser = GOAParser.gpi_iterator(infile_handle)
+
+    for rec in parser:
+        if not rec.has_key('Gene_Product_Properties'):
+            print "This version of the gp information file does not contain all required information"
+            sys.exit(1)
+        else:
+            break
+
+    for rec in parser:
+        taxid = rec['Taxon'].split(':')[1].strip()
+        db = rec['Gene_Product_Properties'][0].split('=')[1].strip()
         if db.startswith('Swiss-Prot') and taxon == taxid:
-            sp_id[fields[0]] = 1
+            sp_id[rec['DB_Object_ID']] = 1
 
     return sp_id
+
 
 
 def insert_into_db(record, taxon, GAFFIELDS):
@@ -66,6 +72,7 @@ def insert_into_db(record, taxon, GAFFIELDS):
             conn.close()
 
 
+
 def extract_gaf(rec, outfile, GAFFIELDS, record, sp_id, taxon):
 
     t = ()
@@ -82,6 +89,7 @@ def extract_gaf(rec, outfile, GAFFIELDS, record, sp_id, taxon):
 
     return record
 
+
 if __name__ == '__main__':
 
     gaf_file = sys.argv[1]
@@ -93,15 +101,17 @@ if __name__ == '__main__':
     record = []
 
     sp_id = parse_gpi(gpi_file, taxon)
-    inrec = GOAParser.gafiterator(gaf_handle)
-    for rec in inrec:
+    parser = GOAParser.gafiterator(gaf_handle)
+
+    for rec in parser:
         if len(rec) == 15:
             GAFFIELDS = GOAParser.GAF10FIELDS
             break
         elif len(rec) == 17:
             GAFFIELDS = GOAParser.GAF20FIELDS
             break
-    for rec in inrec:
+
+    for rec in parser:
         record = extract_gaf(rec, outfile, GAFFIELDS, record, sp_id, taxon)
     
     new_record = tuple(record)

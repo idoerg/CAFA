@@ -54,4 +54,4 @@ def plot_stats(benchmark_file):
 
 if __name__ == '__main__' :
     infile = sys.argv[1]
-    plot_stats(infile)
+    plot_stats(infile, host_url='')

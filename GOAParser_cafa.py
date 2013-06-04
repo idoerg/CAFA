@@ -68,10 +68,15 @@ def record_has_forBenchmark(inupgrec, ann_freq, allowed, tax_name_id_mapping, EE
                     retval=False                                                                                                            
                     break
             elif field == 'Blacklist':
+                rec_set = set([])
                 if type(inupgrec['DB:Reference']) is type(''):
-                    rec_set = set([inupgrec['DB:Reference']])
+                    rec_set = set([inupgrec['DB:Reference'].split(':')[1]])
                 else:
-                    rec_set = set(inupgrec['DB:Reference'])
+                    for x in inupgrec['DB:Reference']:
+                        if x.startswith('PMID'):
+                            x = x.split(':')[1]
+                            rec_set.add(x)
+                
                 if len(rec_set & allowed[field]) > 0:
                      retval=False
                      break

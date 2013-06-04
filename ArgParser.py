@@ -85,13 +85,13 @@ def check_args(args_dict,parser):
                 user_dict[arg] = set([])
             else:
                 args_dict[arg] = [x.capitalize() for x in args_dict[arg]]
-                user_dict[arg] = args_dict[arg]
+                user_dict[arg] = set(args_dict[arg])
         else:
             if 'all' in args_dict[arg] or len(args_dict[arg]) == 0:
                 user_dict[arg] = set([])
             else:
                 args_dict[arg] = [x.upper() for x in args_dict[arg]]
-                user_dict[arg] = args_dict[arg]
+                user_dict[arg] = set(args_dict[arg])
 
     if user_dict['t1'] == user_dict['t2']:
         print 'Both input files are from the same time point. This will not create a valid benchmark.\n'

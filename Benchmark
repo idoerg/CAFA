@@ -63,7 +63,7 @@ def create_iterator(infile):
         
     return iter_handle, GAFFIELDS
 
-def create_output(params, outfile, infile):
+def create_output(params, outfile, infile, work_dir):
     if not outfile == '':
         ob = basename(params['outfile']) 
     else:
@@ -73,7 +73,7 @@ def create_output(params, outfile, infile):
             ob = basename(infile + '.target')
         
     index = 1
-    while os.path.exists(ob + '.' + str(index)):
+    while os.path.exists(work_dir + '/' + ob + '.' + str(index)):
         index = index + 1
     output_filename = ob + '.' + str(index)
 
@@ -152,7 +152,7 @@ if parsed_dict['Program'] == 'TG':
     taxa = raw_input('Enter the taxon id for which you want to have target sequences : ')
     t1_input_file = work_dir + '/' + CreateDataset.parse(t1, ConfigParam)
     t2_input_file = work_dir + '/' + CreateDataset.parse(t2, ConfigParam)
-    output_filename = work_dir + '/' + create_output(parsed_dict, outfile_basename, t1_input_file + '_for_' + taxa)
+    output_filename = work_dir + '/' + create_output(parsed_dict, outfile_basename, t1_input_file + '_for_' + taxa, work_dir)
     sp_id = TargetGenerator_from_uniprot.parse_gpi(t2_input_file, taxa)
     iter_handle, GAFFIELDS = create_iterator(t1_input_file)
     targets_F, targets_P, targets_C = TargetGenerator_from_uniprot.extract_gaf(iter_handle, GAFFIELDS, sp_id, taxa, targetType)
@@ -175,7 +175,8 @@ else:
     t2_input_file = work_dir + '/' + CreateDataset.parse(t2, ConfigParam)
 
     # Filename initialization
-    output_filename = work_dir + '/' + create_output(parsed_dict, outfile_basename, t2_input_file)
+    output_filename = work_dir + '/' + create_output(parsed_dict, outfile_basename, t2_input_file, work_dir)
+    print output_filename
     outfile = open(t2_input_file + '.exponly', 'w')
     t2_exp = t2_input_file + '.exponly'
     filename = t2_exp + '_bench.txt'

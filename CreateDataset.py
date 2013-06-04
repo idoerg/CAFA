@@ -6,7 +6,6 @@ import re
 import FtpDownload
 import Zipper
 from collections import defaultdict
-from ftplib import FTP
 from os.path import basename
 import shutil
 
@@ -18,33 +17,9 @@ def parse(infile, ConfigParam=defaultdict):
     t1_input_file = None
 
     if (re.match(date_regex,infile)) or (re.match('current', infile, re.IGNORECASE)):
+        
+        [download_status,down_filename] = FtpDownload.initialize(infile, ConfigParam)
 
-        try:
-            ftp = FTP(ConfigParam['ftp_host'])
-        except:
-            print 'Oops! FTP_HOST parameter has not been set correctly in the config file.'
-            sys.exit()
-
-        ftp.login()
-
-        if infile == 'current':
-            try:
-                remote_dir = ConfigParam['ftp_curr_path']
-                remote_dir = remote_dir.rstrip('/')
-            except:
-                print 'Oops! FTP Download directory path not set correctly in config file.'
-                sys.exit()
-        else:
-            [month,year] = infile.split('_')
-            month = month.capitalize()
-            try:
-                remote_dir = ConfigParam['ftp_old_path']
-                remote_dir = remote_dir.rstrip('/')
-            except:
-                print 'Oops! FTP Download directory path not set correctly in config file.'
-                sys.exit()
-
-        [download_status,down_filename] = FtpDownload.download(infile,ftp, remote_dir, work_dir)
         if download_status == 1:
             t1_input_file = Zipper.unzipper(down_filename, ConfigParam)
         elif download_status == -1:
@@ -78,7 +53,6 @@ def parse(infile, ConfigParam=defaultdict):
                 t1_input_file = ''
                 t1_input_file = extracted_file
 
-        #Add the Format Checker Module
     return t1_input_file
 
 

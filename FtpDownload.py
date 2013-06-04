@@ -7,14 +7,72 @@ import shutil
 import progressbar
 from collections import defaultdict
 import multiprocessing
+from ftplib import FTP
 
-def download(time_point,ftp,remote_dir,work_dir):
+def check(filename, work_dir):
+    
+    download_status = 0
 
-    filename = ''
+    unzipped_fname = filename.replace('.gz', '')
+    if os.path.exists(work_dir + '/' + filename):
+        download_status = -1
+    elif os.path.exists('./' + filename):
+        download_status = -1
+    elif os.path.exists(work_dir + '/' + unzipped_fname):
+        download_status = -1
+    elif os.path.exists('./' + unzipped_fname):
+        download_status = -1
+    
+    return download_status
+
+def download(work_dir, filename, filesize, ftp):
+    local_filename = os.path.join(work_dir + '/' + filename)
+    progress = progressbar.AnimatedProgressBar(start=0, end=filesize, width=50)
+    print 'Downloading ' + filename
+    with open(local_filename, 'w') as outfile:
+        def callback(block):
+            outfile.write(block)
+            progress + len(block)
+            progress.show_progress()
+            
+        ftp.retrbinary('RETR '+filename, callback, 81920)
+    download_status = 1
+
+    return download_status
+
+def initialize(time_point,ConfigParam):
+
     file_list = []
     download_status = 0
     filename = ''
     file_found = 0
+    filename_set = []
+    work_dir = ConfigParam['workdir']
+
+    try:                                                                                                                                  
+        ftp = FTP(ConfigParam['ftp_host'])                                                                                               
+    except:                                                                                                                               
+        print 'Oops! FTP_HOST parameter has not been set correctly in the config file.'                                                  
+        sys.exit()                                                                                                                       
+    ftp.login()
+
+    if time_point == 'current':                                                                                                              
+        try:                                                                                                                             
+            remote_dir = ConfigParam['ftp_curr_path']                                                                                    
+            remote_dir = remote_dir.rstrip('/')                                                                                          
+        except:                                                                                                                          
+            print 'Oops! FTP Download directory path not set correctly in config file.'                                                  
+            sys.exit()                                                                                                                   
+    else:                                                                                                                                
+        [month,year] = time_point.split('_')                                                                                                 
+        month = month.capitalize()                                                                                                       
+        try:                                                                                                                             
+            remote_dir = ConfigParam['ftp_old_path']                                                                                     
+            remote_dir = remote_dir.rstrip('/')                                                                                          
+        except:                                                                                                                          
+            print 'Oops! FTP Download directory path not set correctly in config file.'                                                  
+            sys.exit()
+
 
     ftp.cwd(remote_dir)
     ftp.dir('.', file_list.append)
@@ -24,43 +82,12 @@ def download(time_point,ftp,remote_dir,work_dir):
             terms = i.split(' ')
             if not terms[-1].startswith('gene_association'):
                 continue
-            unzipped_fname = terms[-1].replace('.gz', '')
-            if os.path.exists(work_dir + '/' + terms[-1]):
-                filename = terms[-1]
-                download_status = -1
-                continue
-            elif os.path.exists('./' + terms[-1]):
-                filename = terms[-1]
-                download_status = -1
-                continue
-            elif os.path.exists(work_dir + '/' + unzipped_fname):
-                filename = unzipped_fname
-                download_status = -1
-                continue
-            elif os.path.exists('./' + unzipped_fname):
-                filename = unzipped_fname
-                download_status = -1
-                continue
-            
-            filename = terms[-1]
-            filesize = ftp.size(filename)
+            download_status = check(terms[-1], work_dir)
             file_found = 1
 
+        filesize = ftp.size(filename)
         if download_status == 0 and file_found == 1:
-            modified_filesize = float(filesize / 1024000000)
-        #if modified_filesize > 1.0:
-         #   print 'This is a ' + str(modified_filesize) + ' GB file. Downloading it might take a while. Please be patient!!!'
-            local_filename = os.path.join(work_dir + '/' + filename)
-            progress = progressbar.AnimatedProgressBar(start=0, end=filesize, width=50)
-            print 'Downloading ' + filename
-            with open(local_filename, 'w') as outfile:
-                def callback(block):
-                    outfile.write(block)
-                    progress + len(block)
-                    progress.show_progress()
-  
-                ftp.retrbinary('RETR '+filename, callback, 81920)
-            download_status = 1
+            download_status = download(work_dir, filename, filesize)
 
     else:
         for i in file_list:
@@ -70,43 +97,16 @@ def download(time_point,ftp,remote_dir,work_dir):
             if not terms[-1].startswith('gene_association'):
                 continue
             if(terms[18] == month) and (terms[21] == year):
+                download_status = check(terms[-1], work_dir)
+                filename_set.append(filename)
                 file_found = 1
-                unzipped_fname = terms[-1].replace('.gz', '')
-                if os.path.exists(work_dir + '/' + terms[-1]):
-                    filename = terms[-1]
-                    download_status = -1
-                    continue
-                elif os.path.exists(work_dir + '/' + unzipped_fname):
-                    filename = unzipped_fname
-                    download_status = -1
-                    continue
                 
-                if filename:
-                    version_num = filename.split('.')[2]
-                    if terms[-1].split('.')[2] > version_num:
-                        filename = terms[-1]
-                        filesize = ftp.size(filename)
-                else:
-                    filename = terms[-1]
-                    filesize = ftp.size(filename)
+        filename_set.sort()        
+        filename = filename_set[-1]
+        filesize = ftp.size(filename)
 
         if download_status == 0 and file_found == 1:
-            modified_filesize = float(filesize / 1024000000)
-            #if modified_filesize > 1.0:
-             #   print 'This is a ' + str(modified_filesize) + ' GB file. Downloading it might take a while. Please be patient!!!'
-            
-            local_filename = os.path.join(work_dir + '/' + filename)
-            progress = progressbar.AnimatedProgressBar(start=0, end=filesize, width=50)
-                
-            print 'Downloading ' + filename
-            with open(local_filename, 'w') as outfile:
-                def callback(block):
-                    outfile.write(block)
-                    progress + len(block)
-                    progress.show_progress()
-  
-                ftp.retrbinary('RETR '+filename, callback, 81920)
-            download_status = 1
+            download_status = download(work_dir, filename, filesize, ftp)
 
     if download_status == 1:
         print '\nSuccesfully downloaded files from uniprot-goa'
@@ -121,7 +121,7 @@ def download(time_point,ftp,remote_dir,work_dir):
         elif time_point == 'n':
             sys.exit(1)
 
-
+            
     return download_status, filename
 
 if __name__ == '__main__':

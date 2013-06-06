@@ -9,6 +9,17 @@ from collections import defaultdict
 from os.path import basename
 import shutil
 
+'''
+   Given an input filename or time point, the script calls the FTP utility
+   of uniprot-goa to download required files. If the file is already
+   present in the current or working directory, it does not download it again.
+   Once downloaded, the script returns the name of the downloaded file.
+
+   The module has 2 methods suited towards inputs from a CAFA or non-CAFA user.
+   For a CAFA user, there is the parse_cafa method that parses a fasta file and
+   pulls out proteins ids.
+
+'''
 def parse(infile, ConfigParam=defaultdict):
 
     date_regex = ConfigParam['ftp_date']

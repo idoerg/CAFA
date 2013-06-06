@@ -5,6 +5,21 @@ import sys
 from collections import defaultdict
 import Stats
 
+'''
+   The main method of the module calc basically computes the
+   precision and recall values over each threshold at or above
+   which, atleast 1 prediction was submitted.
+   At first, precision and recall values are calculated for each
+   protein at a particular threshold (called precision and recall
+   per protein per threshold) and then an average is taken
+   across all proteins predicted at or above a given threshold to
+   get the precision and recall per threshold.
+
+   These values are used to plot the final prec-rec curve.
+
+'''
+
+
 def extract_proteins(threshold_list,pred_dict):
 
     prots_per_thresh = defaultdict(lambda:set())

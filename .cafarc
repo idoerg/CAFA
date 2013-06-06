@@ -8,7 +8,6 @@ OLD_FILE_PATH : /pub/databases/GO/goa/old/UNIPROT
 
 [DEFAULTS]
 EXP_EVIDENCE_CODES : set(['EXP','IDA','IPI','IMP','IGI','IEP'])
-IEA_EVIDENCE_CODES : set(['IEA'])
 ONTOLOGIES : set(['F','P','C'])
 TAXONOMY_FILENAME : names.dmp
 

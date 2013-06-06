@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
 import sys
@@ -9,21 +9,37 @@ from collections import defaultdict
 import multiprocessing
 from ftplib import FTP
 
+'''
+   This script remotely connects to the uniprot-goa site through FTP, 
+   and downloads required files. Before downloading, it checks to see
+   if the files are already present in the current or working directory.
+   If yes, it does not download them again.
+
+   If there is no file in teh time point being requested, the program will
+   ask the user to supply a different time point if they wish to, or exit
+
+   A progressbar keeps updating the amount of download completed.
+
+'''
+
 def check(filename, work_dir):
     
     download_status = 0
-
+    
     unzipped_fname = filename.replace('.gz', '')
     if os.path.exists(work_dir + '/' + filename):
         download_status = -1
     elif os.path.exists('./' + filename):
         download_status = -1
     elif os.path.exists(work_dir + '/' + unzipped_fname):
+        filename = unzipped_fname
         download_status = -1
     elif os.path.exists('./' + unzipped_fname):
+        filename = unzipped_fname
         download_status = -1
     
-    return download_status
+    return filename, download_status
+
 
 def download(work_dir, filename, filesize, ftp):
     local_filename = os.path.join(work_dir + '/' + filename)
@@ -39,6 +55,7 @@ def download(work_dir, filename, filesize, ftp):
     download_status = 1
 
     return download_status
+
 
 def initialize(time_point,ConfigParam):
 
@@ -82,11 +99,11 @@ def initialize(time_point,ConfigParam):
             terms = i.split(' ')
             if not terms[-1].startswith('gene_association'):
                 continue
-            download_status = check(terms[-1], work_dir)
+            [filename, download_status] = check(terms[-1], work_dir)
             file_found = 1
 
-        filesize = ftp.size(filename)
         if download_status == 0 and file_found == 1:
+            filesize = ftp.size(filename)
             download_status = download(work_dir, filename, filesize)
 
     else:
@@ -97,15 +114,15 @@ def initialize(time_point,ConfigParam):
             if not terms[-1].startswith('gene_association'):
                 continue
             if(terms[18] == month) and (terms[21] == year):
-                download_status = check(terms[-1], work_dir)
+                [filename, download_status] = check(terms[-1], work_dir)
                 filename_set.append(filename)
                 file_found = 1
                 
         filename_set.sort()        
         filename = filename_set[-1]
-        filesize = ftp.size(filename)
 
         if download_status == 0 and file_found == 1:
+            filesize = ftp.size(filename)
             download_status = download(work_dir, filename, filesize, ftp)
 
     if download_status == 1:
@@ -114,8 +131,10 @@ def initialize(time_point,ConfigParam):
         print '\n' + time_point + ' file to be downloaded already present in working directory'
     else:
         print '\nThere is no file to be downloaded for time point ' + time_point
-        print 'Check out the different time points from this site : ftp://ftp.ebi.ac.uk/pub/databases/GO/goa/old/UNIPROT/'
-        time_point = raw_input('Do you want to provide a different time point (either provide a time point or say n) : ')
+        print 'Check out the different time points from this site : ' + \
+            'ftp://ftp.ebi.ac.uk/pub/databases/GO/goa/old/UNIPROT/'
+        time_point = raw_input('Do you want to provide a different time point ' + \
+                                   '(either provide a time point or say n) : ')
         if (re.match('[a-zA-Z]+\_\d+',time_point)) or (re.match('current',time_point)):
             [download_status, filename] = download(time_point,ftp,remote_dir,work_dir)
         elif time_point == 'n':

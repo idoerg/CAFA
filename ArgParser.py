@@ -3,9 +3,14 @@
 import os
 import sys
 import argparse
-from collections import defaultdict
 import re
+from collections import defaultdict
 
+'''
+   This script parses, verifies a bunch of user input parameters using argparse module.
+   Finally creates a dictionary with all parameter values and returns it
+
+'''
 def extract_args(args):
     
     # This dictionary below contains the values of all arguments available to the program. 
@@ -59,7 +64,6 @@ def check_args(args_dict,parser):
                 user_dict['t1'] = args_dict[arg]
 
         elif arg == 't2':
-            #if args_dict['Program'] == 'BC' and args_dict[arg] == None:
             if args_dict[arg] == None:
                 print 'Missing T2 file\n'
                 print parser.parse_args(['--help'])
@@ -130,7 +134,6 @@ if __name__ == '__main__':
     parser.add_argument('-F', '--confidence',default='F',help='Allows user to turn on the annotation confidence filter. If turned on, GO terms assignments to proteins that are documented in few papers (4 or less by default) will not be considered part of the benchmark set.By default, it is turned off.')
     parser.add_argument('-T', '--threshold',type=int, default=4,help='Allows users to specify a threshold for the minimum number of papers tobe used for having a confident annotation. If not specified, defaults to a value of 4.')
     parser.add_argument('-B', '--blacklist', nargs='*',default=[], help='This parameter can take in a list of pubmed ids and all GO terms andproteins annotated in them will be eliminated from the benchmark set.Default is an empty list.')
-    #args = parser.parse_args()
-    parse(parser)
+    parse(parser, ConfigParam=defaultdict())
 
     

@@ -1,10 +1,19 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import sys
 import os
 import re
 from collections import defaultdict
 import Mapping
+
+'''
+   This is a script to filter all prediction data for which a benchmark
+   set is available to be assessed on. Normally, predeiction data is 
+   provided in Swiss prot format and because the benchmark data contains
+   uniprot ids, a mapping is required to keep them consistent. This mapping
+   is also performed before the filtering can be done.
+
+'''
 
 def pred_filter(infile1, infile2):
 

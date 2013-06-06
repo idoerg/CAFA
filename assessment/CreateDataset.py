@@ -4,6 +4,16 @@ import os
 import sys
 from collections import defaultdict
 
+'''
+    Depending on which ontologies the user would like to assess,
+    this script splits the original prediction file accordingly 
+    and produces the required prediction file data.
+
+    Does the same for the benchmark as well. Given a single benchmark
+    file, the script splits it off into the required ontologies.
+
+'''
+
 def createPred(pred_file, ontology=set(['F', 'P', 'C'])):
 
     go_mfo = defaultdict()

@@ -5,6 +5,17 @@ import sys
 from collections import defaultdict
 import re
 
+'''
+   Given an input file and a bunch of parameters, this module calculates
+   2 things: the number of annotations per paper for every paper listed
+   in the input file and the other is, calculate how many papers are
+   associated with every protein annotation pair. The first helps to filter
+   out high throughput papers (if required) and the second helps to identify 
+   confident annotations. The assumption is annotations in more papers are
+   considered confident over others.
+'''
+
+
 def count(infile, EEC=set([]), ann_conf_filter=False, paper_conf_filter=False):
     paper_conf = defaultdict(lambda:defaultdict(set))
     ann_conf = defaultdict(lambda:defaultdict(set))
@@ -16,7 +27,6 @@ def count(infile, EEC=set([]), ann_conf_filter=False, paper_conf_filter=False):
         if line[0] == '!':
             continue
         fields = line.strip().split('\t')
-        #if fields[5] != '' and fields[5].startswith('PMID'):
         if not fields[5] == '' and re.match('^PMID', fields[5]):
             paper_id = fields[5].split(':')[1]
         

@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-# The assessment program takes in 2 files: One file containing predictions for a set of target proteins and the other file containing the true experimental validations for the same targets
-
 import os
 import sys
 import re
@@ -18,6 +16,22 @@ import ConfigParser
 from os.path import basename
 import shutil
 
+'''
+   The CAFA Assessment tool is used for comparing user predictions with CAFA benchmark
+   There are 2 types of assessment performed : protein centric and term centric.
+   This program currently only assess using protein centric measure.
+
+   The assessment program takes in 2 files: One file containing predictions 
+   for a set of target proteins and the other file containing the true 
+   experimental validations for the same targets
+
+   Output : A text file containing precision and recall values at all thresholds
+   provided by the user and a precision-recall curve of the same
+'''
+
+
+
+
 print "Welcome to the CAFA Assessment Tool!!!!"
 print "***************************************\n"
 
@@ -29,7 +43,7 @@ parser.add_argument('-O', '--output', nargs='*',default=[], help='Optional argum
 parser.add_argument('-N', '--ontology',action='store',nargs='*',default=['all'],help='Provides user a choice to specify a list of ontologies(example: F, P, C) separated by space.Default is all.')
 parser.add_argument('-R', '--prop',action='store',default='F',help='Can take in either T of F values. If T, the program will assume that the predictions and benchmark are already propagated. Default is F.')
 
-# Search for config file in the current directory                                                                                             
+# Search for config file in the current directory and if missing, creates a new one                                                                                             
 fname_ind = 0
 
 for root,dirs,files in os.walk('.'):
@@ -53,13 +67,14 @@ ConfigParam = {'workdir' : Config_handle.get('WORKDIR', 'DEFAULT_PATH')
 work_dir = ConfigParam['workdir']
 work_dir = work_dir.rstrip('/')
 
+# If working directory is already present, creates one 
 if not os.path.exists(work_dir):
     os.makedirs(work_dir)
 
 parsed_input = ArgParser.parse(parser)
 print "Successfully validated inputs.......\n"
 
-# Check if inputs exist
+# Check if predictions file exists
 
 pred_file_basename = basename(parsed_input['pred_file'])
 if os.path.exists(work_dir + '/' + pred_file_basename):
@@ -71,6 +86,8 @@ else:
     print parsed_input['pred_file'] + ' is not available.'
     sys.exit(1)
 
+# Check if benchmark file exists
+
 bench_file_basename = basename(parsed_input['bench_file'])
 if os.path.exists(work_dir + '/' + bench_file_basename):
     bench_file = work_dir + '/' + bench_file_basename
@@ -81,7 +98,8 @@ else:
     print parsed_input['bench_file'] + ' is not available.'
     sys.exit(1)
 
-# Output format
+# Format output filename based on supplied output prefix
+
 outfile_basename = basename(parsed_input['outfile'])
 
 if not outfile_basename == '':
@@ -89,7 +107,7 @@ if not outfile_basename == '':
 else:
     ob = pred_file + '.prec_rec'
 
-# Check file formats
+# Check format of prediction file
 
 pred_file_handle = open(pred_file, 'r')
 print "Checking prediction file format.........\n"
@@ -131,6 +149,8 @@ for lines in pred_file_handle:
 
 print 'Successfully validated prediction file format\n'
 
+# Check format of benchmark file
+
 exp_file_handle = open(bench_file, 'r')
 print "Checking benchmark file format.......\n"
 
@@ -146,7 +166,7 @@ for line in exp_file_handle:
    
 print 'Successfully validated benchmark file format.\n'
 
-# Check for Propagation status
+# Check for Propagation status. If predictions are not propagated, propagates them
 
 if parsed_input['prop_status'] == 'T':
     propagated_pred_file = pred_file

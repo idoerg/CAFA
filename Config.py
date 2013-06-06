@@ -1,8 +1,21 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
 import sys
 import re
+
+'''
+   In the event that a user does not have a .cafarc file in his main
+   directory, this script will go ahead and create one for the user
+   and then proceed with running the benchmark program.
+
+   The .cafarc file basically details path and directory that will be used 
+   throughout the program.
+
+   If there is a change in the evidence codes being used or if uniprot-goa
+   changes its ftp path, changes need to be made in the .cafarc file and
+   it should get reflected throughout the program.
+'''
 
 def create():
 
@@ -27,7 +40,6 @@ def create():
     
     outfile_handle.write('[DEFAULTS]\n')
     outfile_handle.write('EXP_EVIDENCE_CODES : ' + str(set(['EXP','IDA','IPI','IMP','IGI','IEP'])) + '\n')
-    outfile_handle.write('IEA_EVIDENCE_CODES : ' + str(set(['IEA'])) + '\n')
     outfile_handle.write('ONTOLOGIES : ' + str(set(['F','P','C'])) + '\n')
     outfile_handle.write('TAXONOMY_FILENAME : names.dmp\n')
     

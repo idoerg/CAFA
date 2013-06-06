@@ -3,26 +3,55 @@
 import os
 import sys
 import re
-from collections import defaultdict
 import argparse
 import shutil
-import ArgParser
-import CreateDataset
-import CreateBenchmark
-import PaperTermFrequency
 import subprocess
-import ConfigParser
+from collections import defaultdict
+from os.path import basename
+import ArgParser as ap
+import CreateDataset as cd
+import CreateBenchmark as cb
+import PaperTermFrequency as ptf
+import ConfigParser as cp
 import Config
 import Stats
-import FormatChecker
-import SeqDownload
-from os.path import basename
-import GOAParser_cafa
-import GOAParser
-import TargetGenerator_from_uniprot
+import FormatChecker as fc
+import SeqDownload as sd
+import GOAParser_cafa as gc
+import GOAParser # In future, this module will be replaced with the Bio-Python module GOA.py in Bio.UniProt
+import TargetGenerator_from_uniprot as tg
 
+'''
+   The Benchmark program is made to work in 2 modes: Benchmark Creation mode and Target Generation 
+   mode. The default mode is the Benchmark Creation.
+
+   In the Benchmark Creation mode, the program accepts 2 uniprot-goa gaf-format files or time points. 
+   These are available for download at ftp://ftp.ebi.ac.uk/pub/databases/GO/goa/
+
+   There are a host of other parameters that could be provided to filter results. The list of all 
+   parameters can be obtained through the following command:
+
+   python Benchmark --help
+
+   Output for this mode consists or 3 files : a tab-delimited file of all the benchmark proteins, 
+   a fasta file with sequence information of all benchmark proteins and a .png plot showing how 
+   many benchmark proteins are from a given ontology.
+
+   In the Target Generation mode, obtained by setting the parameter -M TG, 2 input files are mandatory.
+   The first file is a uniprot-goa gaf format file and the second is a uniprot-goa gpi format file.
+
+   The only optional parameter for this mode is targetType. By default, it is set to 0 which means only
+   IEA exclusive proteins would be considered for being potential targets.
+
+   Output : A fasta file with sequences from all target proteins.
+
+'''
 
 def paper_term_freq(params, infile):
+
+    # Given an input uniprot-goa file, this method computes the number of proteins annotated
+    # in every pubmed id mentioned in that file
+
     if params['Confidence'] == 'T':
         paper_threshold = params['Threshold']
         ann_conf_filter = True
@@ -38,7 +67,8 @@ def paper_term_freq(params, infile):
         paper_conf_filter = False
     
     if ann_conf_filter or paper_conf_filter : 
-        [ann_conf, paper_conf] = PaperTermFrequency.count(infile, params['Evidence'], ann_conf_filter, paper_conf_filter)
+        [ann_conf, paper_conf] = ptf.count(infile, params['Evidence'], 
+                                                          ann_conf_filter, paper_conf_filter)
 
         if len(paper_conf) > 0:
             for i in paper_conf:
@@ -51,6 +81,10 @@ def paper_term_freq(params, infile):
     return ann_conf
 
 def create_iterator(infile):
+
+    # Returns an iterator object for an input uniprot-goa file along with a list of all
+    # fieldnames contained in the uniprot-goa file
+
     infile_handle = open(infile, 'r')
     iter_handle = GOAParser.gafiterator(infile_handle)
     for ingen in iter_handle:
@@ -64,6 +98,9 @@ def create_iterator(infile):
     return iter_handle, GAFFIELDS
 
 def create_output(params, outfile, infile, work_dir):
+    
+    # Creates an output filename based on the output file prefix provided by the user
+
     if not outfile == '':
         ob = basename(params['outfile']) 
     else:
@@ -80,23 +117,48 @@ def create_output(params, outfile, infile, work_dir):
     return output_filename
 
 
-# The first step with using the argparse module is to create a parser object that can then parse all the user inputs and convert them into python objects based on the user input types provided
+# The first step with using the argparse module is to create a parser object that can 
+# then parse all the user inputs and convert them into python objects based on the user 
+# input types provided
 
 parser = argparse.ArgumentParser(prog='bm.py',description='Creates a set of benchmark proteins')
-parser.add_argument('-M', '--mode', default='BC', help='This option allows the user to run the program either as a Benchmark Creator or a Target Generator. It takes in values of BC or TG. Default, if not provided is BC.')
-parser.add_argument('-Y', '--targetType', default='0', help='This option allows user to specify what kind of targets they would like to includein their target set. This options takes in values of 0 (means the user needs only IEA exclusive targets) or 1(means the user can have targetswith both IEA and EXP evidence codes).Default is 0.')
-parser.add_argument('-G','--organism',nargs='*', default=['all'],help='Provides user a choice to specify a set of organisms (example:Saccharomyces cerevisiae or 7227) separated by space.Default is all.')
-parser.add_argument('-N','--ontology',nargs='*', default=['all'],help='Provides user a choice to specify a set of ontologies (F, P, C) separated by space. Default is all.')
-parser.add_argument('-V','--evidence',nargs='*', default=['all'],help='Provides user a choice to specify a set of GO experimental evidence codes (example: IPI, IDA, EXP) separated by space.Default is all.')
-parser.add_argument('-C','--cafa', default='F' ,help='Takes in either T or F. If specified as T, user needs to provide a CAFA targets file asinput1. If F, program will take in a uniprot-goa file as input1. Default is F')
-parser.add_argument('-I1', '--input1', help='This opton is mandatory. Specifies path to the first input file.')
-parser.add_argument('-I2', '--input2', help='This option is mandatory. Specifies path to the second input file.')
-parser.add_argument('-O', '--output', default='', help='Optional argument.Provides user an option to specify an output filename.')
-parser.add_argument('-S', '--source',action='store' ,nargs='*',default=['all'],help='Provides user a choice to specify sources (example: UniProt, InterPro) separated by spaces. Default is all.')
-parser.add_argument('-P', '--pubmed',default='F',help='Allows user to turn on the pubmed filter. If turned on, GO terms w/o any Pubmed references will not be considered part of the benchmark set.By default, it is turned off.')
-parser.add_argument('-F', '--confidence',default='F',help='Allows user to turn on the annotation confidence filter. If turned on, GO terms assignments to proteins that are documented in few papers (4 or less by default) will not be considered part of the benchmark set.By default, it is turned off.')
-parser.add_argument('-T', '--threshold',type=int, default=4,help='Allows users to specify a threshold for the minimum number of papers to be used for having a confident annotation. If not specified, defaults to a value of 4.')
-parser.add_argument('-B', '--blacklist', nargs='*',default=[], help='This parameter can take in a list of pubmed ids and all GO terms and proteins annotated in them will be eliminated from the benchmark set.Default is an empty list.')
+parser.add_argument('-M', '--mode', default='BC', help='This option allows the user to run the program ' + \
+                        'either as a Benchmark Creator or a Target Generator. It takes in values of BC or TG. ' + \
+                        'Default, if not provided is BC.')
+parser.add_argument('-Y', '--targetType', default='0', help='This option allows user to specify ' + \
+                        'what kind of targets they would like to includein their target set.' + \
+                        ' This options takes in values of 0 (means the user needs only IEA ' + \
+                        'exclusive targets) or 1(means the user can have targetswith both IEA' + \
+                        'and EXP evidence codes).Default is 0.')
+parser.add_argument('-G','--organism',nargs='*', default=['all'],help='Provides user a choice ' + \
+                        'to specify a set of organisms (example:Saccharomyces cerevisiae or 7227) ' + \
+                        'separated by space.Default is all.')
+parser.add_argument('-N','--ontology',nargs='*', default=['all'],help='Provides user a choice to ' + \
+                        'specify a set of ontologies (F, P, C) separated by space. Default is all.')
+parser.add_argument('-V','--evidence',nargs='*', default=['all'],help='Provides user a choice to ' + \
+                        'specify a set of GO experimental evidence codes (example: IPI, IDA, EXP) ' + \
+                        'separated by space.Default is all.')
+parser.add_argument('-C','--cafa', default='F' ,help='Takes in either T or F. If specified as T, ' + \
+                        'user needs to provide a CAFA targets file asinput1. If F, program will ' + \
+                        'take in a uniprot-goa file as input1. Default is F')
+parser.add_argument('-I1', '--input1', help='This opton is mandatory. Specifies path to first input file.')
+parser.add_argument('-I2', '--input2', help='This option is mandatory. Specifies path to second input file.')
+parser.add_argument('-O', '--output', default='', help='Provides user an option to specify an output filename prefix.')
+parser.add_argument('-S', '--source',action='store' ,nargs='*',default=['all'],help='Provides user ' + \
+                        'a choice to specify sources (example: UniProt, InterPro) separated by spaces. Default is all.')
+parser.add_argument('-P', '--pubmed',default='F',help='Allows user to turn on the pubmed filter. ' + \
+                        'If turned on, GO terms w/o any Pubmed references will not be considered ' + \
+                        'part of the benchmark set.By default, it is turned off.')
+parser.add_argument('-F', '--confidence',default='F',help='Allows user to turn on the annotation ' + \
+                        'confidence filter. If turned on, GO terms assignments to proteins that are ' + \
+                        'documented in few papers (4 or less by default) will not be considered part ' + \
+                        'of the benchmark set.By default, it is turned off.')
+parser.add_argument('-T', '--threshold',type=int, default=4,help='Allows users to specify a threshold ' + \
+                        'for the minimum number of papers to be used for having a confident annotation. ' + \
+                        'If not specified, defaults to a value of 4.')
+parser.add_argument('-B', '--blacklist', nargs='*',default=[], help='This parameter can take in a list of ' + \
+                        'pubmed ids and all GO terms and proteins annotated in them will be eliminated from ' + \
+                        'the benchmark set.Default is an empty list.')
 
 # Search for config file in the current directory. If not present, creates a new config file
 fname_ind = 0
@@ -113,7 +175,7 @@ for root,dirs,files in os.walk('.'):
     break
     
 # Reads the config file and stores values in a dictionary
-Config_handle = ConfigParser.ConfigParser()
+Config_handle = cp.ConfigParser()
 Config_handle.read('.cafarc')
 ConfigParam = defaultdict()
 
@@ -122,7 +184,6 @@ ConfigParam = {'workdir' : Config_handle.get('WORKDIR', 'DEFAULT_PATH'),
                'ftp_curr_path' : Config_handle.get('FTP', 'CURRENT_FILE_PATH'),
                'ftp_old_path' : Config_handle.get('FTP', 'OLD_FILE_PATH'),
                'exp_eec' : Config_handle.get('DEFAULTS', 'EXP_EVIDENCE_CODES'),
-               'iea_eec' : Config_handle.get('DEFAULTS', 'IEA_EVIDENCE_CODES'),
                'ont_def' : Config_handle.get('DEFAULTS', 'ONTOLOGIES'),
                'tax_file' : Config_handle.get('DEFAULTS', 'TAXONOMY_FILENAME'),
                'uniprot_path' : Config_handle.get('SEQUENCE', 'BASE_URL'),
@@ -139,50 +200,53 @@ if not os.path.exists(work_dir):
     os.makedirs(work_dir)
 
 # Parses the set of user given parameters and returns a dictionary of the same.
-parsed_dict = ArgParser.parse(parser, ConfigParam)
+parsed_dict = ap.parse(parser, ConfigParam)
 t1 = parsed_dict['t1']
 t2 = parsed_dict['t2']
 outfile_basename = basename(parsed_dict['outfile'])
 targetType = parsed_dict['Target']
 
-# The conditional statement below checks if the user called the program in the default mode or in Target Generation mode 
-# and proceeds further accordingly.
+# The conditional statement below checks if the user called the program in the default 
+# mode or in Target Generation mode and proceeds further accordingly.
 
 if parsed_dict['Program'] == 'TG':
     taxa = raw_input('Enter the taxon id for which you want to have target sequences : ')
-    t1_input_file = work_dir + '/' + CreateDataset.parse(t1, ConfigParam)
-    t2_input_file = work_dir + '/' + CreateDataset.parse(t2, ConfigParam)
-    output_filename = work_dir + '/' + create_output(parsed_dict, outfile_basename, t1_input_file + '_for_' + taxa, work_dir)
-    sp_id = TargetGenerator_from_uniprot.parse_gpi(t2_input_file, taxa)
+    t1_input_file = work_dir + '/' + cd.parse(t1, ConfigParam)
+    t2_input_file = work_dir + '/' + cd.parse(t2, ConfigParam)
+    output_filename = work_dir + '/' + create_output(parsed_dict, outfile_basename, 
+                                                     t1_input_file + '_for_' + taxa, work_dir)
+    sp_id = tg.parse_gpi(t2_input_file, taxa)
     iter_handle, GAFFIELDS = create_iterator(t1_input_file)
-    targets_F, targets_P, targets_C = TargetGenerator_from_uniprot.extract_gaf(iter_handle, GAFFIELDS, sp_id, taxa, targetType)
+    targets_F, targets_P, targets_C = tg.extract_gaf(
+        iter_handle,GAFFIELDS, sp_id, taxa, targetType)
     
     print 'Downloading target sequences from uniprot....'
 
-    SeqDownload.down(output_filename + '_F', uniprot_path, targets_F)
-    SeqDownload.down(output_filename + '_P', uniprot_path, targets_P)
-    SeqDownload.down(output_filename + '_C', uniprot_path, targets_C)
+    sd.down(output_filename + '_F', uniprot_path, targets_F)
+    sd.down(output_filename + '_P', uniprot_path, targets_P)
+    sd.down(output_filename + '_C', uniprot_path, targets_C)
     print 'Thank you for using the Target Generation Software.'
     sys.exit(1)
     
 else:
     # Create input datasets based on whether the user chose CAFA pr non-CAFA mode
     if parsed_dict['Mode'] == 'T':
-        t1_input_file = work_dir + '/' + CreateDataset.parse_cafa(t1, ConfigParam)
+        t1_input_file = work_dir + '/' + cd.parse_cafa(t1, ConfigParam)
     else:
-        t1_input_file = work_dir + '/' + CreateDataset.parse(t1, ConfigParam)
+        t1_input_file = work_dir + '/' + cd.parse(t1, ConfigParam)
     
-    t2_input_file = work_dir + '/' + CreateDataset.parse(t2, ConfigParam)
+    t2_input_file = work_dir + '/' + cd.parse(t2, ConfigParam)
 
     # Filename initialization
-    output_filename = work_dir + '/' + create_output(parsed_dict, outfile_basename, t2_input_file, work_dir)
-    print output_filename
+    output_filename = work_dir + '/' + create_output(
+        parsed_dict, outfile_basename, t2_input_file, work_dir)
+    
     outfile = open(t2_input_file + '.exponly', 'w')
     t2_exp = t2_input_file + '.exponly'
     filename = t2_exp + '_bench.txt'
 
     # Add format checker module here
-    FormatChecker.check(t1_input_file, t2_input_file,parsed_dict['Mode'])
+    fc.check(t1_input_file, t2_input_file,parsed_dict['Mode'])
     
     # Create paper-term frequency file
     ann_conf = paper_term_freq(parsed_dict, t2_input_file)
@@ -191,12 +255,15 @@ else:
     iter_handle, GAFFIELDS = create_iterator(t2_input_file)
 
     # Creates a dictionary of taxon id-name mapping
-    tax_id_name_mapping = GOAParser_cafa.parse_tax_file(ConfigParam['tax_file'])
+    tax_id_name_mapping = gc.parse_tax_file(ConfigParam['tax_file'])
 
-    # Filters t2 file for all proteins with experimentally annotated terms based on user defined parameters
+    # Filters t2 file for all proteins with experimentally annotated terms 
+    # based on user defined parameters
     print "Parsing t2 file " + basename(t2_input_file)
     for ingen in iter_handle:
-        GOAParser_cafa.record_has_forBenchmark(ingen, ann_conf, parsed_dict, tax_id_name_mapping, ConfigParam['exp_eec'],outfile,GAFFIELDS)
+        gc.record_has_forBenchmark(
+            ingen,ann_conf, parsed_dict, tax_id_name_mapping, 
+            ConfigParam['exp_eec'],outfile,GAFFIELDS)
 
     # If the filtered t2 file is empty, it will end up producing an empty benchmark file. 
     # Hence, the program will break here with a message 
@@ -207,30 +274,34 @@ else:
     # Filters t1 file and creates benchmark
     if parsed_dict['Mode'] == 'T':
         t1_iea = t1_input_file + '.iea1'
-        CreateBenchmark.parse_cafa(t2_exp, t1_iea)
+        cb.parse_cafa(t2_exp, t1_iea)
     else:
         iter_handle, GAFFIELDS = create_iterator(t1_input_file)    
-        GOAParser_cafa.t1_filter(iter_handle, t2_exp, t1_input_file, GAFFIELDS, ConfigParam['exp_eec'])
+        gc.t1_filter(
+            iter_handle, t2_exp, t1_input_file, GAFFIELDS, ConfigParam['exp_eec'])
         t1_iea_handle = open(t1_input_file + '.iea1' , 'r')
         t1_exp_handle = open(t1_input_file + '.exp1' , 'r')
-        CreateBenchmark.parse(t1_iea_handle, t1_exp_handle, t2_exp, ConfigParam['exp_eec'])
+        cb.parse(
+            t1_iea_handle, t1_exp_handle, t2_exp, ConfigParam['exp_eec'])
  
     # Checks the size of the benchmark file created. If empty, program will quit with a message.
     # Else, will proceed to create the sequence file based on user requirement
     if os.stat(filename).st_size == 0:
         print "Your benchmark set is empty."
     else:
-        response = raw_input('What kind of protein sequences do you want in your benchmark file : enter 1 if you want only proteins with novel annotation or 0 if you want all : ')
+        response = raw_input('What kind of protein sequences do you want in your benchmark file : ' + \
+                                 'enter 1 if you want only proteins with novel annotation or 0 if ' + \
+                                 'you want all : ')
         if response == '1':
             cmd = "awk -F \'\t\' '{if ($4 == \"N\") print;}' " + filename + " | sort | uniq " + " > " + output_filename
             subprocess.call(cmd, shell=True)
             unique_proteins_new, unique_proteins = Stats.plot_stats(output_filename)
-            SeqDownload.down(output_filename, uniprot_path, unique_proteins_new)
+            sd.down(output_filename, uniprot_path, unique_proteins_new)
         else:
             cmd = "awk -F \'\t\' '{print;}' " + filename +  " | sort | uniq " + " > " + output_filename
             subprocess.call(cmd, shell=True)
             unique_proteins_new, unique_proteins = Stats.plot_stats(output_filename)
-            SeqDownload.down(output_filename, uniprot_path, unique_proteins)
+            sd.down(output_filename, uniprot_path, unique_proteins)
 
     # Cleans the working directory by removing files created in the intermediate steps
     print 'Cleaning working directory....'

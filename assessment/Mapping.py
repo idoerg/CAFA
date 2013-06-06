@@ -7,6 +7,12 @@ from collections import defaultdict
 import dbm
 import subprocess
 
+'''
+   User supplied predictions will normally contain swiss-
+   prot ids as identifiers. In such a case, mapping to the uniprot id
+   is performed to maintain consistency
+'''
+
 def mapper_pred(infile):
 
     db1 = defaultdict()

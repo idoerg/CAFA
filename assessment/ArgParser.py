@@ -6,6 +6,13 @@ from collections import defaultdict
 import re
 import argparse
 
+'''
+   This module checks input parameter values for Assess program.
+   If invalid or incompletearguments are present, the program 
+   will break with a message.
+
+   Returns a dictionary of all user parameter values
+'''
 
 def parse(parser):
     args,unknown = parser.parse_known_args()

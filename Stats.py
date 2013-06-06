@@ -8,6 +8,18 @@ from collections import defaultdict
 import subprocess
 import urllib
 
+'''
+   This module uses pyplot module from matplotlib to generate
+   a bar plot. 
+
+   The bar plot describes the ontology distribution of the 
+   proteins chosen to be part of the benchmark set. It would
+   help the user to understand if the benchmark set is biased
+   towards a certain ontology.
+
+   The script takes the benchmark file created as input and
+   outs a .png file
+'''
 def plot_stats(benchmark_file):
     x_val = []
     y_val = []

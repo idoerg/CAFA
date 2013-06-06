@@ -7,23 +7,30 @@ import sqlite3
 import GOAParser
 
 '''
-           This script extracts all swiss prot proteins , for a particular taxon, along with its associated information
-           from uniprot-goa files.It takes as input a gene-association file, gene protein information file and a taxon 
-           id as input. The first 2 files ideally should be of the same version to avoid missing any proteins and they
-           can be downloaded from uniprot-goa ftp site ftp://ftp.ebi.ac.uk/pub/databases/GO/goa/. 
+           This script extracts all swiss prot proteins , for a particular taxon, 
+           along with its associated information from uniprot-goa files.It takes 
+           as input a gene-association file, gene protein information file and a 
+           taxon id as input. The first 2 files ideally should be of the same 
+           version to avoid missing any proteins and they can be downloaded from 
+           uniprot-goa ftp site ftp://ftp.ebi.ac.uk/pub/databases/GO/goa/. 
 
            Usage :
-           python create_SP_only_protein_dataset.py <gene association file> <gene protein information file> <taxon id>
+           python create_SP_only_protein_dataset.py <gene association file> 
+                                      <gene protein information file> <taxon id>
 
            Output:
            .gaf file contains all information in gaf format and 
            .db file that puts all information into a sqlite3 database table
 
-
 '''
 
 def parse_gpi(infile, taxon=''):
-    
+
+    '''
+       This method parses a uniprot-goa gpi file, extracts all proteins
+       associated with Swiss-Prot and belonging to the user specified
+       taxon and returns them
+    '''
     sp_id = defaultdict()
 
     infile_handle = open(infile, 'r')
@@ -49,6 +56,11 @@ def parse_gpi(infile, taxon=''):
 
 def extract_gaf(inrec, GAFFIELDS, sp_id, taxon, targetType):
 
+    '''
+       Iterates over a gaf record iterator object, filters
+       them according to evidence code and returns target proteins
+       based on the target type provided.
+    '''
     target_prots = defaultdict(lambda:defaultdict())
     target_prots_iea = defaultdict(lambda:defaultdict())
     target_prots_exp = defaultdict(lambda:defaultdict())

@@ -5,6 +5,16 @@ import sys
 from collections import defaultdict
 from matplotlib import pyplot as py
 
+'''
+   Returns back a precision-recall curve (in .png format), 
+   given a file with prec-rec data
+
+   It also calculates the coverage of the predictions supplied,
+   to be added as an extra piece of information in the plot
+
+'''
+
+
 def calc_cov(prec_list, rec_list):
 
     cov_list = []

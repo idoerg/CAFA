@@ -5,6 +5,18 @@ import sys
 import os
 from collections import defaultdict
 
+'''
+    In the event that the user predictions and benchmark set are not
+    propagated to contain all ancestral terms in the GO tree, this script
+    will go ahead and do that and return a propagated prediction and
+    benchmark file.
+
+    Since the format of th eprediction and benchmark files are different,
+    There are 2 methods to do the same kind of operation, one for the 
+    prediction and the other for the benchmark file.
+
+'''
+
 def propagate_benchmark(bench_file):
     
     go_tree_handle = open('go_terms_with_all_ancestors_new.txt','r')                                                                        

@@ -7,6 +7,16 @@ from collections import defaultdict
 import subprocess
 import stat
 
+'''
+    A script that checks the format and content of input files.
+    Mainly written to check format of input files given to the
+    Benchmark program.
+    Takes in 2 uniprot-goa files as input along with the program mode,
+    whether CAFA or non-CAFA
+    If an error is encountered with the format, the program breaks
+    with a message
+
+'''
 def check(infile1, infile2, mode):
     if mode == 'T':
         if os.stat(infile1).st_size == 0:

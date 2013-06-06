@@ -4,6 +4,19 @@ import os
 import sys
 import re
 
+'''                                                                                                                                          
+   In the event that a user does not have a .cafarc file in his main                                                                         
+   directory, this script will go ahead and create one for the user                                                                          
+   and then proceed with running the benchmark program.                                                                                      
+                                                                                                                                             
+   The .cafarc file basically details path and directory that will be used                                                                   
+   throughout the program.                                                                                                                   
+                                                                                                                                             
+   If there is a change in the evidence codes being used or if uniprot-goa                                                                   
+   changes its ftp path, changes need to be made in the .cafarc file and                                                                     
+   it should get reflected throughout the program.                                                                                           
+'''
+
 def create():
 
     outfile_handle = open('.cafarc', 'w')

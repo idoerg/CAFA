@@ -6,7 +6,19 @@ import GOAParser
 from os.path import basename
 from collections import defaultdict
 
+'''
+   This module is an extension to the GOAParser module.
+   It has been modified to suit the exact needs of the Benchmark program.
+
+'''
+
 def parse_tax_file(tax_filename):
+
+    '''
+       This method acepts a taxonomy file, downloaded from NCBI
+       and produces a mapping between tax ids and tax names.
+    '''
+
     tax_id_name_mapping = {}
 
     tax_file = open(tax_filename,'r')
@@ -21,28 +33,13 @@ def parse_tax_file(tax_filename):
 
     return tax_id_name_mapping
 
-def gafiterator_extended(handle):
-    """ This function should be called to read a                                                                                         
-    gene_association.goa_uniprot file. Reads the first record and                                                                        
-    returns a gaf 2.0 or a gaf 1.0 iterator as needed                                                                                    
-    """
-
-    inline = handle.readline()
-    if inline.strip() == '!gaf-version: 2.0':
-        sys.stderr.write("gaf 2.0\n")
-        return GOAParser._gaf20iterator(handle),GOAParser.GAF20FIELDS
-    else:
-        sys.stderr.write("gaf 1.0\n")
-        return GOAParser._gaf10iterator(handle),GOAParser.GAF10FIELDS
-    
-
-def record_has_forBenchmark(inupgrec, ann_freq, allowed, tax_name_id_mapping, EEC_default, outfile, GAFFIELDS):
+def record_has_forBenchmark(inupgrec, ann_freq, allowed, tax_name_id_mapping, 
+                            EEC_default, outfile, GAFFIELDS):
     """                                                                                                                                   
-    Accepts a gaf record, and a dictionary of allowed field values. The                                                                  
-    format is {'field_name': set([val1, val2])}.                                                                                         
-    If any field in the record has an allowed value, the function stops                                                                  
-    searching and returns                                                                                                                
-    False. Otherwise, returns true.                                                                                                      
+       Accepts a gaf record, a dictionary of allowed field values and other
+       user specified parameters.                                                                                         
+       If any field in the record does not have an allowed value, the function
+       stops searching and returns False. Otherwise, returns true.                                                                           
     """
 
     retval=True
@@ -54,11 +51,15 @@ def record_has_forBenchmark(inupgrec, ann_freq, allowed, tax_name_id_mapping, EE
             break
         if not inupgrec.has_key(field):
             if field == 'Pubmed':
+                rec_set = set([])
                 if type(inupgrec['DB:Reference']) is type(''):
-                    rec_set = set([inupgrec['DB:Reference']])
+                    rec_set = set([inupgrec['DB:Reference'].split(':')[1]])
                 else:
-                    rec_set = set(inupgrec['DB:Reference'])
-                if allowed[field] == 'T' and rec_set[0] == '':
+                    for x in inupgrec['DB:Reference']:
+                        if x.startswith('PMID'):
+                            x = x.split(':')[1]
+                            rec_set.add(x)
+                if allowed[field] == 'T' and '' in rec_set:
                     retval=False
                     break
             elif field == 'Confidence':
@@ -112,6 +113,13 @@ def record_has_forBenchmark(inupgrec, ann_freq, allowed, tax_name_id_mapping, EE
         GOAParser.writerec(inupgrec,outfile, GAFFIELDS)
 
 def t1_filter(t1_iter, t2_exp, t1_file, GAFFIELDS,EXP_default=set([])):
+
+    '''
+       This method accepts 2 uniprot-goa files and checks to see for all
+       proteins present in t2 files, if the evidence code of the proteins
+       in t1 flle is electronic or experimental. Accordingly, splits them
+       into 2 different files and writes out the files
+    '''
 
     t2_exp_handle = open(t2_exp, 'r')
     

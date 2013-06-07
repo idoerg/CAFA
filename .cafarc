@@ -1,18 +1,33 @@
+# The section below is used to change the working directory for the program. If not changed, all resulting files
+# will get created in the current directory
+
 [WORKDIR]
 DEFAULT_PATH : .
+
+# The section below specifies teh path to uniprot-goa FTP site. In case uniprot decides to chage this in future, 
+# the lines below need to be updated accordingly
 
 [FTP]
 HOSTNAME : ftp.ebi.ac.uk
 CURRENT_FILE_PATH : /pub/databases/GO/goa/UNIPROT
 OLD_FILE_PATH : /pub/databases/GO/goa/old/UNIPROT
 
+# The section below predefines the values for certain variables used throughout the program such as GO experimental
+# codes, ontologies. The exp codes used are the standard ones specified by GO as being experimental. In case if a user
+# wants to add more codes, they need to change the lines below.
+
 [DEFAULTS]
 EXP_EVIDENCE_CODES : set(['EXP','IDA','IPI','IMP','IGI','IEP'])
 ONTOLOGIES : set(['F','P','C'])
 TAXONOMY_FILENAME : names.dmp
 
+# This is the base url of the site from to download sequence information. Currently, sequences are being downloaded
+# through uniprot api.
+
 [SEQUENCE]
 BASE_URL : www.uniprot.org/uniprot/
+
+# A set of regular expression patterns against which to search for
 
 [REGEX]
 FTP_DATE : [a-zA-Z]+\_\d+

@@ -1,9 +1,38 @@
-The CAFA A.D tool is designed to assess user predictions against a benchmark set. The usage of the tool is as follows:
 
-python Assess -P <name of prediction file> -B <name of benchmark file> <some optional parameters>
+CAFA Asessment Program
 
-The optional parameters can be viewed using "python assess_prediction.py --help"
+The CAFA Assessment program is designed to assess user's predictions against a standard benchmark set. This benchmark set
+could be created either using the CAFA Benchmark generator or using any other software, being consistent with the format.
 
-Once the most recent version of the source code has been downloaded, the first script to run is Configure.py. This is like a pre installation script that will download the latest version of the uniprot id mapping file and save it to your current directory. Once this is done, you can run the actual program (using the Assess script above). 
+The CAFA Assessment program can be run in the following way:
 
-The output will be 2 files: A text file containing the precision-recall values per ontology. The second file is a visualization of the precision-recall curve per ontology.
+python Assess -P <prediction filename> -B <benchmark filename>
+
+This simple command will compare predictions in the prediction file with the benchmark and score the method accordingly.
+
+There are a few optional parameters that be viewed by typing this command:
+
+python Assess --help
+
+There are a variety of metrics that can be used to assess protein function predictions. The one currently used by the
+program is the protein-centric measure. So, this tries to measure how well a particular protein has been predicted. The
+other metric that will be added in the future is called the term-centric measure, which checks how well a certain term in
+the GO tree has been predicted. 
+
+Output :
+
+The output of the Assessment program is a tab delimited file with precision - recall values for every threshold at which
+a prediction has been submitted. A precision-recall curve of the same is also provided to obtain graphic visualization of
+the performance of the method.The curve will also help identify the best point, at which both the precision and recall
+are reasonably good. The higher this average is, the better the performance of the prediction method.
+
+Source Code :
+
+The source code for the assessment program cabe found at this url : 
+https://github.com/rajeswari284/CAFA/edit/dev/assessment/
+
+It is open source and users are welcome to contribute to it. In case of any questions or comments regarding the program,
+please send an email to any of the following:
+
+idoerg@gmail.com
+rajeswari284@gmail.com

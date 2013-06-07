@@ -1,4 +1,3 @@
-
 CAFA Asessment Program
 
 The CAFA Assessment program is designed to assess user's predictions against a standard benchmark set. This benchmark set
@@ -14,6 +13,13 @@ There are a few optional parameters that be viewed by typing this command:
 
 python Assess --help
 
+Configuration : 
+
+Before starting to run the main Assess program, a configuration script named "Cofigure.py" needs to be run. This script
+downloads the latest version of the uniprot id-mapping file into the current directory.This file is needed to map Swiss-
+Prot ids to uniprot ids in the main program.
+
+
 There are a variety of metrics that can be used to assess protein function predictions. The one currently used by the
 program is the protein-centric measure. So, this tries to measure how well a particular protein has been predicted. The
 other metric that will be added in the future is called the term-centric measure, which checks how well a certain term in
@@ -25,6 +31,11 @@ The output of the Assessment program is a tab delimited file with precision - re
 a prediction has been submitted. A precision-recall curve of the same is also provided to obtain graphic visualization of
 the performance of the method.The curve will also help identify the best point, at which both the precision and recall
 are reasonably good. The higher this average is, the better the performance of the prediction method.
+
+Sample Files:
+
+There is a sample benchmark file and a sample prediction file provided with the scripts for the appropriate file formats
+to be used with the program and also for a look at the desired output.
 
 Source Code :
 

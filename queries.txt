@@ -1,19 +1,28 @@
-# This file lists a bunch of test queries to test the CAFA BC tool
+# This file lists a bunch of sample test cases for the CAFA Benchmark tool
 
-python benchmark.py --i1 sep_2006 --i2 apr_2007
-python benchmark.py --i1 sep_2006
-python benchmark.py --i1 sep_2006 --i2
-python benchmark.py --i1 --i2 apr_2007
-python benchmark.py --i1 sep_2006 --i2 current
-python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 current
-python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48
-python benchmark.py --i1 ./cafa/gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48
-python benchmark.py --i1 /home/raji/Documents/CAFA-master/cafa/gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48
-python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -O "saccharomyces cerevisiae"
-python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -O 4932
-python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -O 559292
-python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -N P
-python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -V IMP IPI
-python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -V IMP IPI -O 4932
-python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -S PDB
-python benchmark.py --i1 gene_association.goa_uniprot.42 --i2 gene_association.goa_uniprot.48 -P T
+python Benchmark --help
+python Benchmark --input1 sep_2006 --input2 apr_2007
+python Benchmark -M TG --input1 gene_association.goa_uniprot.40 --input2 gp_information.goa_uniprot # The 2 input files
+                                                                  # need to present in your current or working directory
+python Benchmark -M TG--input1 gene_association.goa_uniprot --input2 gp_information.goa_uniprot -Y 1
+
+python Benchmark --input1 sep_2006 --input2 current
+python Benchmark --input1 gene_association.goa_uniprot.42 --input2 current # Files need to be present in current or 
+                                                                              # working directrory
+                                                                              
+python Benchmark --input1 gene_association.goa_uniprot.42 --input2 gene_association.goa_uniprot.48 # Files need to be 
+                                                                              # present in current or working dir
+python Benchmark --input1 gene_association.goa_uniprot.42 --input2 gene_association.goa_uniprot.48 -G "saccharomyces cerevisiae"
+python Benchmark --input1 gene_association.goa_uniprot.42 --input2 gene_association.goa_uniprot.48 -G 4932
+python Benchmark --input1 gene_association.goa_uniprot.42 --input2 gene_association.goa_uniprot.48 -G 559292
+python Benchmark --input1 gene_association.goa_uniprot.42 --input2 gene_association.goa_uniprot.48 -N P
+python Benchmark --input1 gene_association.goa_uniprot.42 --input2 gene_association.goa_uniprot.48 -V IMP IPI
+python Benchmark --input1 gene_association.goa_uniprot.42 --input2 gene_association.goa_uniprot.48 -V IMP IPI -G 4932
+python Benchmark --input1 gene_association.goa_uniprot.42 --input2 gene_association.goa_uniprot.48 -S PDB
+python Benchmark --input1 gene_association.goa_uniprot.42 --input2 gene_association.goa_uniprot.48 -P T
+python Benchmark --input1 gene_association.goa_uniprot.42 --input2 gene_association.goa_uniprot.48 -B 10777584
+python Benchmark --input1 gene_association.goa_uniprot.42 --input2 gene_association.goa_uniprot.48 -O benchmark_file
+python Benchmark --input1 cafa_targets.fasta --input2 input2 gene_association.goa_uniprot.48 -C T
+
+# All filenames that have been mentioned in this use case file need to be first downloaded and saved to your current or
+# home directory. Else, the program will exit with a message saying it could not locate the filenames.

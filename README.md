@@ -9,7 +9,7 @@ prediction methods.
 
 Usage:
 
-python Benchmark --input1 <t1 uniprot-goa filename/time point t1> --input2 <t2 uniprot-goa filename/time point t2>
+python Benchmark --input1 \<t1 uniprot-goa filename/time point t1\> --input2 \<t2 uniprot-goa filename/time point t2\>
 
 This is the most basic version of running the benchmark program that will generate a list of proteins that were
 electronically annotated in t1 file and gained experimenatl evidence in t2 file.
@@ -21,7 +21,7 @@ python Benchmark --help
 This is the default mode of running the program. The other mode is the target generation mode which can be used by adding
 the -M switch to the Benchmark program
 
-python Benchmark -M TG --input1 <uniprot-goa gaf file> --input2 <uniprot-goa gpi file>
+python Benchmark -M TG --input1 \<uniprot-goa gaf file\> --input2 \<uniprot-goa gpi file\>
 
 When run in the above specified way, the program will filter all swiss prot protein in the gaf file, that are in the 
 current gaf file electronically annotated and have the potential of becoming a candidate benchmark in the future. The gpi

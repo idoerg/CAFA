@@ -5,12 +5,12 @@ import sys
 import sqlite3
 
 '''
-    This is a wrapper script for connecting to a sqlite3 database and retrieving values from it.
-    The script takes as input a sqlite db file, name of an outfile where the results would be stored
-    in tab-delimited format.
+    This is a wrapper script for connecting to a sqlite3 database and 
+    retrieving values from it.The script takes as input a sqlite db file, 
+    name of an outfile where the results would be stored in tab-delimited format.
     
-    The script interactively asks the user to input the required query as a string. The format of a 
-    a sqlite query is almost the same as a MySQL query.
+    The script interactively asks the user to input the required query as a string. 
+    The format of a sqlite query is almost the same as a MySQL query.
 
     Usage:
     python fetch_values_from_db.py <name of db file> <name of output file>

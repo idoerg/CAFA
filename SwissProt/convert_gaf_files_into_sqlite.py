@@ -7,11 +7,13 @@ import sqlite3
 import GOAParser # In future, this module will be replaced with the Bio-Python module GOA.py in Bio.UniProt
 
 '''
-    This script takes a uniprot-goa gaf format file as input and converts it into a table in a sqlite database.
-    A single table, by the name of uniprot-goa, will be created that will hold all values from the gaf file
+    This script takes a uniprot-goa gaf format file as input and converts 
+    it into a table in a sqlite database.A single table, by the name of uniprot-goa, 
+    will be created that will hold all values from the gaf file
     
     As of now, the tabe is created according to the existing gaf file formats of 1.0 and 2.0.
-    If in future other file formats, with different column names come up, the table columns need to be changed manually in the script
+    If in future other file formats, with different column names come up, the table 
+    columns need to be changed manually in the script
 
     Usage:
     python convert_gaf_files_into_sqlite.py <gaf format file>
@@ -37,9 +39,16 @@ def gaf_parser(rec, outfile, GAFFIELDS, record):
     t = ()
 
     if len(GAFFIELDS) == 15:
-        t = (rec['DB'], rec['DB_Object_ID'], rec['DB_Object_Symbol'], ('|'.join(rec['Qualifier'])), rec['GO_ID'], ('|'.join(rec['DB:Reference'])), rec['Evidence'], ('|'.join(rec['With'])), rec['Aspect'], ('|'.join(rec['DB_Object_Name'])), ('|'.join(rec['Synonym'])), rec['DB_Object_Type'], ('|'.join(rec['Taxon_ID'])), rec['Date'], rec['Assigned_By'])
+        t = (rec['DB'], rec['DB_Object_ID'], rec['DB_Object_Symbol'], ('|'.join(rec['Qualifier'])), 
+             rec['GO_ID'], ('|'.join(rec['DB:Reference'])), rec['Evidence'], ('|'.join(rec['With'])), 
+             rec['Aspect'], ('|'.join(rec['DB_Object_Name'])), ('|'.join(rec['Synonym'])), 
+             rec['DB_Object_Type'], ('|'.join(rec['Taxon_ID'])), rec['Date'], rec['Assigned_By'])
     elif len(GAFFIELDS) == 17:
-        t = (rec['DB'], rec['DB_Object_ID'], rec['DB_Object_Symbol'], ('|'.join(rec['Qualifier'])), rec['GO_ID'], ('|'.join(rec['DB:Reference'])), rec['Evidence'], ('|'.join(rec['With'])), rec['Aspect'], rec['DB_Object_Name'], ('|'.join(rec['Synonym'])), rec['DB_Object_Type'], ('|'.join(rec['Taxon_ID'])), rec['Date'], rec['Assigned_By'], rec['Annotation_Extension'], rec['Gene_Product_Form_ID'])
+        t = (rec['DB'], rec['DB_Object_ID'], rec['DB_Object_Symbol'], ('|'.join(rec['Qualifier'])), 
+             rec['GO_ID'], ('|'.join(rec['DB:Reference'])), rec['Evidence'], ('|'.join(rec['With'])), 
+             rec['Aspect'], rec['DB_Object_Name'], ('|'.join(rec['Synonym'])), rec['DB_Object_Type'], 
+             ('|'.join(rec['Taxon_ID'])), rec['Date'], rec['Assigned_By'], rec['Annotation_Extension'], 
+             rec['Gene_Product_Form_ID'])
     
     record.append(t)
     return record
@@ -65,11 +74,18 @@ if __name__ == '__main__':
     # Creates a table depending on the version of the gaf file
     for rec in parser:
         if len(rec) == 15:
-            c.execute("create table uniprot_goa(db varchar(20), db_id varchar(20), db_symbol varchar(20), qualifier varchar(20), GO_Term varchar(40),db_ref varchar(40), evidence varchar(3), With varchar(20), ontology char(1), db_name varchar(100), synonym varchar(200), db_type varchar(40),taxid varchar(20), Date date, source varchar(40))")
+            c.execute("create table uniprot_goa(db varchar(20), db_id varchar(20), db_symbol varchar(20), " + \
+                          "qualifier varchar(20), GO_Term varchar(40),db_ref varchar(40), evidence varchar(3), " + \
+                          "With varchar(20), ontology char(1), db_name varchar(100), synonym varchar(200), " + \
+                          "db_type varchar(40),taxid varchar(20), Date date, source varchar(40))")
             GAFFIELDS = GOAParser.GAF10FIELDS
             break
         elif len(rec) == 17:
-            c.execute("create table uniprot_goa(db varchar(20), db_id varchar(20), db_symbol varchar(20), qualifier varchar(20), GO_Term varchar(40),db_ref varchar(40), evidence varchar(3), With varchar(20), ontology char(1), db_name varchar(100), synonym varchar(200), db_type varchar(40),taxid varchar(20), Date date, source varchar(40), ann_ext varchar(20), gene_product varchar(20))")
+            c.execute("create table uniprot_goa(db varchar(20), db_id varchar(20), db_symbol varchar(20), " + \
+                          "qualifier varchar(20), GO_Term varchar(40),db_ref varchar(40), evidence varchar(3), " + \
+                          "With varchar(20), ontology char(1), db_name varchar(100), synonym varchar(200), " + \
+                          "db_type varchar(40),taxid varchar(20), Date date, source varchar(40), " + \
+                          "ann_ext varchar(20), gene_product varchar(20))")
             GAFFIELDS = GOAParser.GAF20FIELDS
             break
 

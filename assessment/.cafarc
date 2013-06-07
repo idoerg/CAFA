@@ -1,2 +1,5 @@
+# The section below is used to change the working directory for the program. If not changed, all resulting files
+# will get created in the current directory
+
 [WORKDIR]
 DEFAULT_PATH : .

@@ -1,19 +1,73 @@
-This is a tool for creating customized benchmarks for assessing protein function prediction methods. 
+CAFA Benchmark Assessment and Target Generation Program
+
+This dual mode tool can be used both for the generation of protein targets that users could predict function on
+and also for the generation of benchmarks that will be used further down to assess user's predictions.
+
+Though the idea stemmed from the existence of the CAFA competition, the tool has been developed in as much of a
+generalized fashion as possible. So, it can be used by both CAFA and non-CAFA particpants for assessing their function
+prediction methods.
 
 Usage:
 
-python Benchmark --input1 <filename or time point> --input2 <filename or time point>
+python Benchmark --input1 <t1 uniprot-goa filename/time point t1> --input2 <t2 uniprot-goa filename/time point t2>
 
-There are a bunch of optional parameters too. To view the entire list type the following:
+This is the most basic version of running the benchmark program that will generate a list of proteins that were
+electronically annotated in t1 file and gained experimenatl evidence in t2 file.
+
+This result can be filtered using a bunch of optional parameters and the entire list can be obtained by typing
+
 python Benchmark --help
 
-The output should contain 2 files. A tab delimited file containing the actual benchmark and a .png file showing the distribution of proteins in different ontologies. In the event if we get a benchmark file with no proteins in them, then there will be no output files.
+This is the default mode of running the program. The other mode is the target generation mode which can be used by adding
+the -M switch to the Benchmark program
 
-Given a protein function prediction method, how do we assess the quality of the method in predicting a variety of target proteins?
+python Benchmark -M TG --input1 <uniprot-goa gaf file> --input2 <uniprot-goa gpi file>
 
-It is a challenge to find proteins whose function has been experimentally determined and which can be used as a benchmark for assessment. This program helps users find that benchmark set based on their choice of organism, ontology etc. 
+When run in the above specified way, the program will filter all swiss prot protein in the gaf file, that are in the 
+current gaf file electronically annotated and have the potential of becoming a candidate benchmark in the future. The gpi
+file is used to obtain information as to which proteins belong to Swiss-Prot.
 
-There can be 2 kinds of users for this program. One set of users are participants of the CAFA competition. They are given a target set of proteins to test their method on.At the point of giving the targets, all of them only have electronic annotations associated with them. Within acertain period of 'x' months, some of these targets will receive experimental annotations and can be used as benchmarks for assessing the user's predictions. So, these users can provide the initial target set as their input to the program along with the version of uniprot-goa thatthey would like to consider for creating the benchmarks. The idea is some proteins from the target set would have received experimental annotations within these 'x' months and only those will form the benchmark set. The version will be in the form of mm_yyyy. The idea is that the more recent the version is, the probability of having more benchmarks is higher.The output will be a file containing the list of benchmark proteins. Along with providing a specific version, users can also customize their benchmarks by providing organisms, ontologies and GO evidencethat they would like to consider. If users don't provide any values for these fields, default values would be used.
+This mode only has 1 optional parameter, -Y or targetType. This switch provides user an option to specify what kind of
+targets they would like to include. In the default case, the targetType is set to '0'. This means all proteins that are
+exclusively electronically annotated (in a given ontology) in the current uniprot-goa gaf file will only be considered
+as being a target protein. The other value for targetType is '1'. This means even proteins that currently have some 
+experimental evidence associated with them could also be considered as target, in the hope that the protein might gain
+additional function in the future.
 
-The other type of user who can use this program need not necessarily be a CAFA participant. He/she just has a prediction method that they would like assess through a benchmark. In such a case, the user might already have a target set or they would like to download one from uniprot-goa. If they don't have a target set of proteins, the input would be a version of uniprot that will be a target set. This version might contain both experimentally and electronically derived annotations. The other input would be a version (definitely later than the first one) that also contains proteins with both experimental and electronic annotations. The idea is that some proteins that were electronically annotated in the first set would have received exp validations in the second set. Those are the ones that can be used to create the benchmark set.As before, users can filter the final set based on their choice.
+There is a config file associated with the program called .cafarc. This file lists the pathnames and pre-defined values
+for some variables. This is the first file that a user of this program should open and go through. Most values are good
+being kept at default. The one thing that users should consider changing is the name of their working directory. In the
+default mode, it will be kept as the current directory. So all result files will be stored in the current directory. But
+a user can change this and provide a separate directory name. In that case, all files resulting will be stored in the 
+directory specified by the user.
+
+Output:
+
+The Target Generation mode of the program outputs a single fasta file. This contains the sequences of all the target
+proteins generated by the program. The header of each sequence will contain a CAFA specific ID and the original Swiss-
+Prot id of the protein.
+
+The Benchmark Creation mode outputs 3 files. The first file is a tab delimited file that lists all the benchmark proteins.
+This file has 4 columns in the following order : Uniprot ID, Ontology, GO Term and either 'N' or 'O' depending on whether
+the annotation is novel or if it was present from before. The second file is a .png file describing the distribution of
+the benchmark proteins with respect to ontology. This bar plot gives users an idea as to how many proteins belong to a
+particular ontology. This might help remove potential bias in the benchmark data. The third file is a fasta file
+containing sequence information for the benchmark proteins. This file is created based on user's choice. When the number
+of benchmark proteins is above 500, the program will ask the user if they want to download the sequence information or
+not, since downloading too many sequences using Uniprot api takes some time.
+
+Sample use cases:
+
+A bunch of sample use cases have been mentioned in the file "queries.txt". This will help provide users with an idea of
+how to use the program and what kind of output to expect. But just keep in mind, the use cases are just 1 out of many
+possible ways that the program can be run. So, feel free to explore with all the availble options.
+
+Source Code :
+
+The source code is publicly available on github through the following url : https://github.com/rajeswari284/CAFA
+This is an open source project. So, please feel free to contribute. In case of any questions or comments regarding the 
+code, please email to any of the following :
+
+idoerg@gmail.com
+rajeswari284@gmail.com
 
